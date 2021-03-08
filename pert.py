@@ -1,9 +1,19 @@
 from __future__ import annotations
+
+import decimal
+
 from scipy.stats import norm
 import math
+from decimal import *
+
+# postavljanje preciznosti decimalnih brojeva na 2 decimale i minimalnog exponenta na -10
+# todo možda postaviti prec na 5 npr, a Emin na 0
+getcontext().prec = 2
+getcontext().Emin = -10
 
 
 # todo pošto listama može biti proslijeđeno bilo šta, i mmože imati duplikata, potrebno je provjeriti prije kreiranja čvorova i aktivnosti
+
 
 class Cvor:
     """
@@ -54,23 +64,23 @@ class Cvor:
         self._izlazneAktivnosti = value
 
     @property
-    def najranijeVrijeme(self) -> float:
+    def najranijeVrijeme(self) -> decimal:
         return self._najranijeVrijeme
 
     @najranijeVrijeme.setter
-    def najranijeVrijeme(self, value: float):
+    def najranijeVrijeme(self, value: decimal):
         self._najranijeVrijeme = value
 
     @property
-    def najkasnijeVrijeme(self) -> float:
+    def najkasnijeVrijeme(self) -> decimal:
         return self._najkasnijeVrijeme
 
     @najkasnijeVrijeme.setter
-    def najkasnijeVrijeme(self, value: float):
+    def najkasnijeVrijeme(self, value: decimal):
         self._najkasnijeVrijeme = value
 
     @property
-    def rezerva(self) -> float:
+    def rezerva(self) -> decimal:
         return self._rezerva
 
     @property
@@ -85,7 +95,7 @@ class Cvor:
         """
         Računa rezervu čvora
         """
-        self._rezerva = self.najkasnijeVrijeme - self.najranijeVrijeme
+        self._rezerva = Decimal(self.najkasnijeVrijeme) - Decimal(self.najranijeVrijeme)
 
     @staticmethod
     def noviCvor() -> Cvor:
@@ -97,9 +107,9 @@ class Cvor:
         Cvor.brojac = Cvor.brojac + 1
         return Cvor(Cvor.brojac)
 
-    # todo ovo sam samo na par mjesta koristio, a na svima je korišteno append, vidjeti šta je bolje
-    def dodajIzlaznuAktivnost(self, aktivnost):
-        self.izlazneAktivnosti.append(aktivnost)
+    # todo ovo sam samo na jednom mjestu koristio, a na svima je korišteno append, vidjeti šta je bolje
+    # def dodajIzlaznuAktivnost(self, aktivnost):
+    #     self.izlazneAktivnosti.append(aktivnost)
 
     # ispisivanje čvora
     def __str__(self) -> str:
@@ -128,8 +138,8 @@ class Aktivnost:
 
     # inicijalizacija aktivnosti
     # todo razmisliti o dodavnaju najranijeg i najkasnijeg početka
-    def __init__(self, naziv: str, preduvjeti: list[str], optimisticnoVrijeme: float, modalnoVrijeme: float,
-                 pesimisticnoVrijeme: float):
+    def __init__(self, naziv: str, preduvjeti: list[str], optimisticnoVrijeme: decimal, modalnoVrijeme: decimal,
+                 pesimisticnoVrijeme: decimal):
         """
         Kreiranje aktivnosti koja je jedinstveno definisana svojim imenom.
 
@@ -148,7 +158,7 @@ class Aktivnost:
         self._rezervaAktivnosti = 0
 
     @property
-    def varijansa(self) -> float:
+    def varijansa(self) -> decimal:
         return self._varijansa
 
     @property
@@ -160,11 +170,11 @@ class Aktivnost:
         self._naziv = value
 
     @property
-    def trajannje(self) -> float:
+    def trajannje(self) -> decimal:
         return self._trajanje
 
     @trajannje.setter
-    def trajannje(self, value: float):
+    def trajannje(self, value: decimal):
         self._trajanje = value
 
     # todo da li vraćati preduvjete kao listu aktivnosti ili onako kako je zadano kao niz stringova naziva prethodnih aktivnosti
@@ -192,7 +202,7 @@ class Aktivnost:
     def krajnjiCvor(self, value: Cvor):
         self._krajnjiCvor = value
 
-    def izracunajOcekivanoVrijeme(self, a: float, m: float, b: float) -> float:
+    def izracunajOcekivanoVrijeme(self, a: decimal, m: decimal, b: decimal) -> decimal:
         """
         Računa očekivano vrijeme za datu aktivnost kao: očekivanoVrijeme=(a+4m+b)/6
 
@@ -202,7 +212,7 @@ class Aktivnost:
         """
         return (a + 4 * m + b) / 6
 
-    def izracunajVarijansu(self, a: float, b: float) -> float:
+    def izracunajVarijansu(self, a: decimal, b: decimal) -> decimal:
         """
         Računa varijansu za zadanu aktivnost kao: varijansa=((b-a)/6)^2
 
@@ -230,7 +240,7 @@ class Aktivnost:
     def __ne__(self, other: Aktivnost) -> bool:
         return self.naziv != other.naziv
 
-
+#todo dodati računanje Z i računanje vjerovatnoće za određeno trajanje
 class Pert:
     """
     Klasa koja čuva mrežni dijagram
@@ -238,13 +248,11 @@ class Pert:
 
     # inicijalizacija grafa
     # todo provjeriti ovaj parametar graf!!
-    def __init__(self, graf: dict = None):
+    def __init__(self):
         """
-        Kreiranje Pert mrežnog dijagrama. Ako se ništa ne proslijedi kreira se prazan graf.
+        Kreiranje praznog Pert mrežnog dijagrama.
 
-        :param graf: dictionary oblika {Cvor: list(Aktivnost)} - svaki čvor sa aktivnostima koje izlaze iz njega
         """
-        self._graf = graf if graf is not None else {}
         self._cvorovi = []
         self._aktivnosti = []
         self._pocetniCvor = None
@@ -260,11 +268,11 @@ class Pert:
         return self._kriticniPutevi
 
     @property
-    def trajanjeProjekta(self) -> float:
+    def trajanjeProjekta(self) -> decimal:
         return self._trajanjeProjekta
 
     @property
-    def procijenjenoTrajanjeProjekta(self) -> float:
+    def procijenjenoTrajanjeProjekta(self) -> decimal:
         return self._procijenjenoVrijemeTrajanja
 
     @property
@@ -322,7 +330,8 @@ class Pert:
         for aktivnost in self.aktivnosti:
             # ako aktivnost nema preduvjeta
             if not aktivnost.preduvjeti:
-                self.pocetniCvor.dodajIzlaznuAktivnost(aktivnost)
+                # self.pocetniCvor.dodajIzlaznuAktivnost(aktivnost)
+                self.pocetniCvor.izlazneAktivnosti.append(aktivnost)
                 aktivnost.pocetniCvor = self.pocetniCvor
                 cvor = Cvor.noviCvor()
                 self.dodajCvor(cvor)
@@ -381,17 +390,20 @@ class Pert:
         """
         # svođenje više krajnjih čvorova na samo jedan
         zadnjiCvor = Cvor.noviCvor()
-        self.dodajCvor(zadnjiCvor)
-        self.krajnjiCvor = zadnjiCvor
+        cvoroviZaBrisanje = []
         for cvor in self.cvorovi:
             if not cvor.izlazneAktivnosti:
                 # sve aktivnosti preusmjeriti u jedan kraj
                 zadnjiCvor.ulazneAktivnosti.extend(cvor.ulazneAktivnosti)
                 for aktivnost in cvor.ulazneAktivnosti:
                     aktivnost.krajnjiCvor = zadnjiCvor
+                cvoroviZaBrisanje.append(cvor)
 
-                # obrisati ostale čvorove
-                self.cvorovi.remove(cvor)
+        # obrisati ostale čvorove
+        for cvor in cvoroviZaBrisanje:
+            self.cvorovi.remove(cvor)
+        self.dodajCvor(zadnjiCvor)
+        self.krajnjiCvor = zadnjiCvor
 
     def renumerisiCvorove(self):
         """
@@ -451,7 +463,7 @@ class Pert:
 
             cvor.najkasnijeVrijeme = min(nizVremena) if nizVremena else cvor.najkasnijeVrijeme
 
-    # todo ovo dobro testirati
+    # ovo nije ok kada ima više kritičnih puteva
     def odrediKriticnePuteve(self, trenutniCvor: Cvor, put: list):
         # označi trenutni čvor posjećenim
         trenutniCvor._posjecen = True
@@ -508,7 +520,7 @@ class Pert:
         for cvor in self.cvorovi:
             cvor.izracunajRezervu()
 
-    def izracunajTrajanjeProjekta(self) -> float:
+    def izracunajTrajanjeProjekta(self) -> decimal:
         """
         Računa trajanje projekta kao razliku između najkasnijeg vremena krajnjeg čvora i najranijeg vremena početnog čvora.
 
@@ -517,7 +529,7 @@ class Pert:
         self._trajanjeProjekta = self.krajnjiCvor.najkasnijeVrijeme - self.pocetniCvor.najranijeVrijeme
         return self.trajanjeProjekta
 
-    def izracunajProcjenuTrajanjaProjekta(self, p: float) -> float:
+    def izracunajProcjenuTrajanjaProjekta(self, p: decimal) -> decimal:
         """
         Računa trajanje projekta za zadanu vjerovatnoću Ts=Te+sigma*Fi^-1(P)
 
@@ -535,15 +547,15 @@ class Pert:
         string += "Kritični putevi: \n" + self.dajStirngKriticnihPuteva()
         return string
 
-    def dajStringKolekcije(self, kolekcija:list) -> str:
+    def dajStringKolekcije(self, kolekcija: list) -> str:
         """
 
         :param kolekcija: Lista čvorova ili lista aktivnosti u grafu.
         :return: String sa svim elementima iz kolekcije.
         """
-        string=""
+        string = ""
         for clan in kolekcija:
-            string+=str(clan)+"\n"
+            string += str(clan) + "\n"
         return string
 
     def dajStirngKriticnihPuteva(self) -> str:
@@ -558,12 +570,12 @@ class Pert:
             for i in range(1, len(kriticniPut)):
                 # nalazi aktivnosti koje povezuju kritične događaje
                 for aktivnost in kriticniPut[i].ulazneAktivnosti:
-                    if aktivnost.pocetniCvor == kriticniPut[i-1] and aktivnost.krajnjiCvor == kriticniPut[i]:
+                    if aktivnost.pocetniCvor == kriticniPut[i - 1] and aktivnost.krajnjiCvor == kriticniPut[i]:
                         s += aktivnost.naziv + " - "
                         break
 
-            #izbacivanje zadnja tri znaka : " - "
-            s=s[:-3]
+            # izbacivanje zadnja tri znaka : " - "
+            s = s[:-3]
             # dodaje string jednog kritičnog puta
             string += s + "\n"
         return string
@@ -580,18 +592,20 @@ class Pert:
 
 
 if __name__ == "__main__":
-    graf = Pert()
-    graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
-    graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
-    graf.dodajAktivnost(Aktivnost("C", ["B"], 4, 5, 12))
-    graf.dodajAktivnost(Aktivnost("D", ["B"], 9, 10, 11))
-    graf.dodajAktivnost(Aktivnost("E", ["B"], 19, 19, 19))
-    graf.dodajAktivnost(Aktivnost("F", ["C", "D"], 12, 12, 12))
-    graf.dodajAktivnost(Aktivnost("G", ["E", "F"], 6, 7, 14))
-    graf.dodajAktivnost(Aktivnost("H", ["E", "F"], 2, 4, 24))
-    graf.dodajAktivnost(Aktivnost("I", ["G"], 2, 4, 6))
-    graf.dodajAktivnost(Aktivnost("J", ["G", "H"], 3, 3, 3))
-    graf.azurirajGraf()
-    print(graf)
+    # graf = Pert()
+    # graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
+    # graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
+    # graf.dodajAktivnost(Aktivnost("C", ["B"], 4, 5, 12))
+    # graf.dodajAktivnost(Aktivnost("D", ["B"], 9, 10, 11))
+    # graf.dodajAktivnost(Aktivnost("E", ["B"], 19, 19, 19))
+    # graf.dodajAktivnost(Aktivnost("F", ["C", "D"], 12, 12, 12))
+    # graf.dodajAktivnost(Aktivnost("G", ["E", "F"], 6, 7, 14))
+    # graf.dodajAktivnost(Aktivnost("H", ["E", "F"], 2, 4, 24))
+    # graf.dodajAktivnost(Aktivnost("I", ["G"], 2, 4, 6))
+    # graf.dodajAktivnost(Aktivnost("J", ["G", "H"], 3, 3, 3))
+    # graf.azurirajGraf()
+    # print(graf)
     # print(graf.izracunajProcjenuTrajanjaProjekta(0.25))
     # print(graf.izracunajProcjenuTrajanjaProjekta(0.9987))
+    if Decimal(0) - Decimal(0.000000000000002) == 0:
+        print("ok")
