@@ -240,7 +240,8 @@ class Aktivnost:
     def __ne__(self, other: Aktivnost) -> bool:
         return self.naziv != other.naziv
 
-#todo dodati računanje Z i računanje vjerovatnoće za određeno trajanje
+
+# todo dodati računanje Z i računanje vjerovatnoće za određeno trajanje
 class Pert:
     """
     Klasa koja čuva mrežni dijagram
@@ -538,6 +539,16 @@ class Pert:
         # return self.trajanjeProjekta + self._devijacijaNaKriticnomPutu * Pert.izracunajInverznoFi(p)
         return self.trajanjeProjekta + self._devijacijaNaKriticnomPutu * norm.ppf(p)
 
+    #todo ovo nisam siguran
+    def izracunajVjerovatnocuZavrsetkaProjekta(self, period: decimal) -> decimal:
+        """
+        Funckija računa vjerovatnoću završetka projekta za određeni period.
+
+        :param period: Period za koji se traži vjerovatnoća završetka projekta.
+        :return: Vjerovatnoća završetka za dati period.
+        """
+        return norm.cdf((period - self.trajanjeProjekta) / self._devijacijaNaKriticnomPutu)
+
     # ispisivanje Pert grafa
     def __str__(self) -> str:
         string = ""
@@ -607,5 +618,6 @@ if __name__ == "__main__":
     # print(graf)
     # print(graf.izracunajProcjenuTrajanjaProjekta(0.25))
     # print(graf.izracunajProcjenuTrajanjaProjekta(0.9987))
-    if Decimal(0) - Decimal(0.000000000000002) == 0:
-        print("ok")
+    # if Decimal(0) - Decimal(0.000000000000002) == 0:
+    #     print("ok")
+    print(norm.cdf(norm.ppf(0.25)))

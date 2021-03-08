@@ -20,6 +20,11 @@ class MyTestCase(unittest.TestCase):
                    Aktivnost("H", ["F"], 4,6,7), Aktivnost("I", ["F"], 2,6,8),
                    Aktivnost("J", ["E", "G", "H"], 6,9,10), Aktivnost("K", ["I"], 1,2,3)]
 
+    #primjer 8.8.
+    aktivnosti3 = [Aktivnost("A", [], 3,6,10), Aktivnost("B", [], 2,3,4), Aktivnost("C", [], 2,2,2),
+                   Aktivnost("D", ["C"], 2,2,2), Aktivnost("E", ["A"], 3,5,10),
+                   Aktivnost("F", ["A"], 1,1,2), Aktivnost("G", ["B", "D"], 3,4,6),
+                   Aktivnost("H", ["E"], 1,1,2), Aktivnost("I", ["F","G"], 3,4,5)]
 
     @staticmethod
     def dodajAktivnosti(graf:Pert, kolekcija:list[Aktivnost]):
@@ -78,6 +83,18 @@ class MyTestCase(unittest.TestCase):
         # za vjerovatnoću 0.75
         self.assertEqual(24.06, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.75), 2))
 
+    def testTrajanja3(self):
+        self.graf = Pert()
+        MyTestCase.dodajAktivnosti(self.graf, MyTestCase.aktivnosti3)
+        self.graf.azurirajGraf()
+        self.assertEqual(12.83, round(self.graf.trajanjeProjekta, 2))
+
+    def testVjerovatnoceZavrsetkaProjektaUPredvidjenomRoku(self):
+        self.graf = Pert()
+        MyTestCase.dodajAktivnosti(self.graf, MyTestCase.aktivnosti3)
+        self.graf.azurirajGraf()
+        self.assertEqual(0.31, round(self.graf.izracunajVjerovatnocuZavrsetkaProjekta(12), 2))
+        self.assertEqual(0.76, round(self.graf.izracunajVjerovatnocuZavrsetkaProjekta(14), 2))
 
 
 if __name__ == '__main__':
