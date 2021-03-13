@@ -202,6 +202,18 @@ class Aktivnost:
     def krajnjiCvor(self, value: Cvor):
         self._krajnjiCvor = value
 
+    @property
+    def rezervaAktivnosti(self):
+        return self._rezervaAktivnosti
+
+    def izracunajRezervu(self):
+        """
+        Računa rezervu aktivnosti kao:
+        najkasnije vrijeme krajnjeg čvora - najranije vrijeme početnog čvora - trajanje aktivnosti
+        i spašava rezultat u privatni atribut.
+        """
+        self._rezervaAktivnosti=Decimal(self.krajnjiCvor.najkasnijeVrijeme)-Decimal(self.pocetniCvor.najranijeVrijeme)-Decimal(self.trajannje)
+
     def izracunajOcekivanoVrijeme(self, a: decimal, m: decimal, b: decimal) -> decimal:
         """
         Računa očekivano vrijeme za datu aktivnost kao: očekivanoVrijeme=(a+4m+b)/6
@@ -254,14 +266,14 @@ class Pert:
         Kreiranje praznog Pert mrežnog dijagrama.
 
         """
-        self._cvorovi = []
-        self._aktivnosti = []
-        self._pocetniCvor = None
-        self._krajnjiCvor = None
-        self._kriticniPutevi = []
-        self._trajanjeProjekta = 0
-        self._procijenjenoVrijemeTrajanja = 0
-        self._devijacijaNaKriticnomPutu = 0
+        self._cvorovi = []  # lista čvorova u dijagramu
+        self._aktivnosti = []  # lista aktivnosti u dijagramu
+        self._pocetniCvor = None  # početni čvor u dijagramu
+        self._krajnjiCvor = None  # krajnji čvor u dijagramu
+        self._kriticniPutevi = []  # lista kritičnih puteva u dijagramu
+        self._trajanjeProjekta = 0  # očekivano trajanje projekta
+        self._procijenjenoVrijemeTrajanja = 0  # trajanje projekta koje se računa na zahtjev sa određenom vjerovatnoćom
+        self._devijacijaNaKriticnomPutu = 0  # standarda devijacija aktivnosti na kritičnom putu
 
     # definisanje getera i setera
     @property
@@ -328,7 +340,8 @@ class Pert:
         cvor = Cvor.noviCvor()
         self.dodajCvor(cvor)
         self.pocetniCvor = cvor
-        for aktivnost in self.aktivnosti:
+        kopija= self.aktivnosti[:]
+        for aktivnost in kopija:
             # ako aktivnost nema preduvjeta
             if not aktivnost.preduvjeti:
                 # self.pocetniCvor.dodajIzlaznuAktivnost(aktivnost)
@@ -358,9 +371,9 @@ class Pert:
                 self.dodajCvor(cvor)
                 for preduvjetnaAktivnost in nizPreduvjeta:
                     fiktivnaAktivnost = Aktivnost("fiktivna", [], 0, 0, 0)
-                    # todo ovo je problem jer onda nastavi petlju, a ne treba je nastaviti!!
+                    # todo naknadno sam stavio da se spašavaju i fiktivne aktivnosti
                     # ne vjerujem da treba dodavati ove fiktivne aktivnosti
-                    # self.dodajAktivnost(fiktivnaAktivnost)
+                    self.aktivnosti.append(fiktivnaAktivnost)
                     preduvjetnaAktivnost.krajnjiCvor.izlazneAktivnosti.append(fiktivnaAktivnost)
                     fiktivnaAktivnost.pocetniCvor = preduvjetnaAktivnost.krajnjiCvor
                     fiktivnaAktivnost.krajnjiCvor = cvor
@@ -389,7 +402,7 @@ class Pert:
         """
         Skraćuje mrežni dijagram izbacivanjem nepotrebnih čvorova
         """
-        # svođenje više krajnjih čvorova na samo jedan
+        #svođenje više krajnjih čvorova na samo jedan
         zadnjiCvor = Cvor.noviCvor()
         cvoroviZaBrisanje = []
         for cvor in self.cvorovi:
@@ -412,6 +425,7 @@ class Pert:
         Nakon izvršavanja funkcije čvorovi u grafu su pravilno (topološki) sortirani
         """
         imaPromjena = True
+        i=0
         while imaPromjena:
             # određivanje ranga čvorova u trenutnoj iteraciji
             imaPromjena = False
@@ -423,6 +437,13 @@ class Pert:
                 cvor.rang = max(cvor.rang, (max(rangPrethodnika) if rangPrethodnika else 0) + 1)
                 # ako je bila barem jedna promjena ranga potrebno je izvršiti još iteracija u while petlji
                 if prethodniRang != cvor.rang: imaPromjena = True
+            #todo ovo je dodano testirati
+            #Algoritam mora terminirati u n iteracija inače pravilna numeracija ne postoji,
+            # odnosno graf ima petlje
+            i=i+1
+            if i>len(self.cvorovi):
+                raise RuntimeError("Graf ne smije imati petlje!")
+
 
         # todo provjeriti da nebi bilo problema nakon što se sortiraju u Pert klasi
         # sortiranje čvorova po rangu u rastućem poretku
@@ -511,15 +532,23 @@ class Pert:
         self.izracunajTrajanjeProjekta()
         # self.izracunajNajranijaINajkasnijaVremena()
         self.izracunajRezerveCvorova()
+        self.izracunajRezerveAktivnosti()
         self.odrediKriticnePuteve(self.pocetniCvor, [])
         self.izracunajDevijacijuNaKriticnomPutu()
 
     def izracunajRezerveCvorova(self):
         """
-        Prolazi kroz sve čvorove i računa rezerve.
+        Prolazi kroz sve čvorove i računa njihove rezerve.
         """
         for cvor in self.cvorovi:
             cvor.izracunajRezervu()
+
+    def izracunajRezerveAktivnosti(self):
+        """
+        Prolazi kroz sve aktivnosti i računa njihove rezerve.
+        """
+        for aktivnost in self.aktivnosti:
+            aktivnost.izracunajRezervu()
 
     def izracunajTrajanjeProjekta(self) -> decimal:
         """
@@ -539,7 +568,7 @@ class Pert:
         # return self.trajanjeProjekta + self._devijacijaNaKriticnomPutu * Pert.izracunajInverznoFi(p)
         return self.trajanjeProjekta + self._devijacijaNaKriticnomPutu * norm.ppf(p)
 
-    #todo ovo nisam siguran
+    # todo ovo nisam siguran
     def izracunajVjerovatnocuZavrsetkaProjekta(self, period: decimal) -> decimal:
         """
         Funckija računa vjerovatnoću završetka projekta za određeni period.
