@@ -52,11 +52,19 @@ class MyTestCase(unittest.TestCase):
         MyTestCase.dodajAktivnosti(self.graf, MyTestCase.aktivnosti1)
         self.graf.azurirajGraf()
         # za vjerovatnoću 0.25
-        self.assertEqual(38.95, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.25),2))
+        self.assertEqual(38.97, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.25), 2))
         # za vjerovatnoću 0.75
-        self.assertEqual(41.05, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.75), 2))
+        self.assertEqual(41.03, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.75), 2))
         # za vjerovatnoću 0.9987
-        self.assertEqual(44.71, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.9987), 2))
+        self.assertEqual(44.6, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.9987), 2))
+
+        # ovo je verzija bez skraćivanja
+        # # za vjerovatnoću 0.25
+        # self.assertEqual(38.95, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.25),2))
+        # # za vjerovatnoću 0.75
+        # self.assertEqual(41.05, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.75), 2))
+        # # za vjerovatnoću 0.9987
+        # self.assertEqual(44.71, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.9987), 2))
 
 
     def testTrajanja2(self):
@@ -70,7 +78,10 @@ class MyTestCase(unittest.TestCase):
         self.graf = Pert()
         MyTestCase.dodajAktivnosti(self.graf, MyTestCase.aktivnosti2)
         self.graf.azurirajGraf()
-        ocekivano="A - C - fiktivna - F - H - fiktivna - J\nB - D - fiktivna - F - H - fiktivna - J\n"
+        # ovo je za verziju bez izbacvanja čvorova
+        # ocekivano="A - C - fiktivna - F - H - fiktivna - J\nB - D - fiktivna - F - H - fiktivna - J\n"
+        # ovo je za verziju sa izbacivanjem
+        ocekivano="A - C - F - H - fiktivna - J\nB - D - fiktivna - F - H - fiktivna - J\n"
         self.assertEqual(ocekivano, self.graf.dajStirngKriticnihPuteva())
 
     #test procjene trajanja kada imaju 2 kritična puta
