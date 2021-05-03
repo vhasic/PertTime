@@ -1,4 +1,3 @@
-# ovo je verzija sa skraćivanjem broja čvorova, ali mi onda ne računa dobro procjenu trajanja projekta, tj greška bude u decimalama
 from __future__ import annotations
 
 import decimal
@@ -116,16 +115,10 @@ class Cvor:
         Cvor.brojac = Cvor.brojac + 1
         return Cvor(Cvor.brojac)
 
-    # todo ovo sam samo na jednom mjestu koristio, a na svima je korišteno append, vidjeti šta je bolje
-    # def dodajIzlaznuAktivnost(self, aktivnost):
-    #     self.izlazneAktivnosti.append(aktivnost)
-
     # ispisivanje čvora
     def __str__(self) -> str:
         string = ""
         string += "{Broj čvora: " + str(self.brojCvora) + ", "
-        # string+="Ulazne aktivnosti: "+self.ulazneAktivnosti+"\n"
-        # string+="Izlazne aktivnosti: "+self.izlazneAktivnosti+"\n"
         string += "Najranije vrijeme: " + str(self.najranijeVrijeme) + ", "
         string += "Najkasnije vrijeme: " + str(self.najkasnijeVrijeme) + "}"
         return string
@@ -146,7 +139,6 @@ class Aktivnost:
     """
 
     # inicijalizacija aktivnosti
-    # todo razmisliti o dodavnaju najranijeg i najkasnijeg početka
     def __init__(self, naziv: str, preduvjeti: list[str], optimisticnoVrijeme: decimal, modalnoVrijeme: decimal,
                  pesimisticnoVrijeme: decimal):
         """
@@ -186,7 +178,6 @@ class Aktivnost:
     def trajannje(self, value: decimal):
         self._trajanje = value
 
-    # todo da li vraćati preduvjete kao listu aktivnosti ili onako kako je zadano kao niz stringova naziva prethodnih aktivnosti
     @property
     def preduvjeti(self):
         return self._preduvjeti
@@ -248,9 +239,6 @@ class Aktivnost:
         string = ""
         string += "{Naziv aktivnosti: " + str(self.naziv) + ", "
         string += "Trajanje aktivnosti: " + str(self.trajannje) + "}"
-        # string += "Preduvjeti: " + str(self.preduvjeti) + "\n"
-        # string += "Početni čvor: " + str(self.pocetniCvor) + "\n"
-        # string += "Krajnji čvor: " + str(self.krajnjiCvor) + "\n"
         return string
 
     # poređenje aktivnosti
@@ -263,7 +251,6 @@ class Aktivnost:
         return self.naziv != other.naziv
 
 
-# todo dodati računanje Z i računanje vjerovatnoće za određeno trajanje
 class Pert:
     """
     Klasa koja čuva mrežni dijagram
@@ -283,8 +270,8 @@ class Pert:
         self._trajanjeProjekta = 0  # očekivano trajanje projekta
         self._procijenjenoVrijemeTrajanja = 0  # trajanje projekta koje se računa na zahtjev sa određenom vjerovatnoćom
         self._devijacijaNaKriticnomPutu = 0  # standarda devijacija aktivnosti na kritičnom putu
-        # todo dodano 3.5
-        self._sviPuteviSaTrajanjemIDevijacijom=[] # lista uređenih trojki (put, Te, sigma) svih puteva od početka do kraja, sa njihovim očekivanim trajanjem i devijacijom
+        self._sviPuteviSaTrajanjemIDevijacijom = []  # lista uređenih trojki (put, Te, sigma) svih puteva od početka do
+        # kraja, sa njihovim očekivanim trajanjem i devijacijom
 
     # definisanje getera i setera
     @property
@@ -292,7 +279,7 @@ class Pert:
         return self._kriticniPutevi
 
     @property
-    def sviPuteviSaTrajanjemIDevijacijom(self)->list:
+    def sviPuteviSaTrajanjemIDevijacijom(self) -> list:
         return self._sviPuteviSaTrajanjemIDevijacijom
 
     @property
@@ -343,7 +330,7 @@ class Pert:
             self.aktivnosti.append(novaAktivnost)
 
     # dodaje novi čvor u graf
-    def dodajCvor(self, noviCvor: Cvor):
+    def __dodajCvor(self, noviCvor: Cvor):
         self.cvorovi.append(noviCvor)
 
     def kreirajStrukturu(self):
@@ -353,7 +340,7 @@ class Pert:
         """
         # početni čvor u grafu
         cvor = Cvor.noviCvor()
-        self.dodajCvor(cvor)
+        self.__dodajCvor(cvor)
         self.pocetniCvor = cvor
         kopija = self.aktivnosti[:]
         brojac = 0
@@ -361,11 +348,10 @@ class Pert:
             brojac = brojac + 1
             # ako aktivnost nema preduvjeta
             if not aktivnost.preduvjeti:
-                # self.pocetniCvor.dodajIzlaznuAktivnost(aktivnost)
                 self.pocetniCvor.izlazneAktivnosti.append(aktivnost)
                 aktivnost.pocetniCvor = self.pocetniCvor
                 cvor = Cvor.noviCvor()
-                self.dodajCvor(cvor)
+                self.__dodajCvor(cvor)
                 cvor.ulazneAktivnosti.append(aktivnost)
                 aktivnost.krajnjiCvor = cvor
             # ako ima samo jedan preduvjet onda mora biti vezana za krajnji čvor prethodne aktivnosti
@@ -375,11 +361,10 @@ class Pert:
                 aktivnost.pocetniCvor = prethodnaAktivnost.krajnjiCvor
                 prethodnaAktivnost.krajnjiCvor.izlazneAktivnosti.append(aktivnost)
                 cvor = Cvor.noviCvor()
-                self.dodajCvor(cvor)
+                self.__dodajCvor(cvor)
                 aktivnost.krajnjiCvor = cvor
                 cvor.ulazneAktivnosti.append(aktivnost)
             else:
-                # todo tek dodano 30.4 Provjeriti!!!
                 # ako dvije aktivnosti imaju iste preduvjete
                 # ako neka od do sada obrađenih aktivnosti ima iste preduvjete ne treba dodavati novi početni čvor
                 aktivnostSaIstimPreduvjetima = None
@@ -399,11 +384,9 @@ class Pert:
 
                     # cvor je novododani kraj fiktivnih aktivnosti, a početak stvarne aktivnosti
                     cvor = Cvor.noviCvor()
-                    self.dodajCvor(cvor)
+                    self.__dodajCvor(cvor)
                     for preduvjetnaAktivnost in nizPreduvjeta:
                         fiktivnaAktivnost = Aktivnost("fiktivna", [], 0, 0, 0)
-                        # todo naknadno sam stavio da se spašavaju i fiktivne aktivnosti
-                        # ne vjerujem da treba dodavati ove fiktivne aktivnosti
                         self.aktivnosti.append(fiktivnaAktivnost)
                         preduvjetnaAktivnost.krajnjiCvor.izlazneAktivnosti.append(fiktivnaAktivnost)
                         fiktivnaAktivnost.pocetniCvor = preduvjetnaAktivnost.krajnjiCvor
@@ -413,7 +396,7 @@ class Pert:
                     cvor.izlazneAktivnosti.append(aktivnost)
                     aktivnost.pocetniCvor = cvor
                 krCvor = Cvor.noviCvor()
-                self.dodajCvor(krCvor)
+                self.__dodajCvor(krCvor)
                 aktivnost.krajnjiCvor = krCvor
                 krCvor.ulazneAktivnosti.append(aktivnost)
         self.odrediKrajnjiCvor()
@@ -428,10 +411,9 @@ class Pert:
                 self.krajnjiCvor = cvor
                 return
 
-    # ima više krajnjih čvorova i zbog toga ništa ne radi
     def izbaciNepotrebneCvorove(self):
         """
-        Skraćuje mrežni dijagram izbacivanjem nepotrebnih čvorova
+        Skraćuje mrežni dijagram izbacivanjem nepotrebnih čvorova.
         """
         # svođenje više krajnjih čvorova na samo jedan
         zadnjiCvor = Cvor.noviCvor()
@@ -441,7 +423,6 @@ class Pert:
         for cvor in self.cvorovi:
             if not cvor.izlazneAktivnosti:
                 krajnjiCvorovi.append(cvor)
-            # todo dodano 30.4: !!
             # izbacivanje viška čvorova za koje vrijedi da u njih ulaze samo fiktivne aktivnosti,
             # u tom slučaju treba obrisati i viška fiktivne aktivnosti
             # ovo vrijedi samo kada su u pitanju samo 2 fiktivne aktivnosti
@@ -513,7 +494,7 @@ class Pert:
         # obrisati viška čvorove
         for cvor in cvoroviZaBrisanje:
             self.cvorovi.remove(cvor)
-        self.dodajCvor(zadnjiCvor)
+        self.__dodajCvor(zadnjiCvor)
         self.krajnjiCvor = zadnjiCvor
 
     def renumerisiCvorove(self):
@@ -534,14 +515,12 @@ class Pert:
                 cvor.rang = max(cvor.rang, (max(rangPrethodnika) if rangPrethodnika else 0) + 1)
                 # ako je bila barem jedna promjena ranga potrebno je izvršiti još iteracija u while petlji
                 if prethodniRang != cvor.rang: imaPromjena = True
-            # todo ovo je dodano testirati
             # Algoritam mora terminirati u n iteracija inače pravilna numeracija ne postoji,
             # odnosno graf ima petlje
             i = i + 1
             if i > len(self.cvorovi):
                 raise RuntimeError("Graf ne smije imati petlje!")
 
-        # todo provjeriti da nebi bilo problema nakon što se sortiraju u Pert klasi
         # sortiranje čvorova po rangu u rastućem poretku
         # key je težina nekog člana, a po defautu sortira u rastućem poretku
         self.cvorovi.sort(key=lambda x: x.rang)
@@ -584,13 +563,13 @@ class Pert:
     def odrediKriticnePuteve(self, trenutniCvor: Cvor, put: list):
         """
         Funkcija rekurzivno određuje sve kritične puteve u grafu, i spašava ih u atribut kriticniPutevi
+
         :param trenutniCvor: Trenutni čvor u nizu rekurzija
         :param put: Do sada nađeni put
         """
         # označi trenutni čvor posjećenim
         trenutniCvor._posjecen = True
         put.append(trenutniCvor)
-        # put.append(trenutniCvor.brojCvora)
 
         # ako se došlo do krajnjeg čvora to je jedan put
         if trenutniCvor == self.krajnjiCvor:
@@ -606,18 +585,25 @@ class Pert:
         put.pop()
         trenutniCvor._posjecen = False
 
-    # todo dodano 3.5
     def odrediSvePuteve(self, trenutniCvor: Cvor, put: list):
+        """
+        Funkcija rekurzivno određuje sve puteve u grafu,
+        vremensko trajanje svagod od tih puteva i devijaciju na svakom putu,
+        i spašava ih u atribut kao niz tuple objekata (put,trajanje,devijacija).
+
+        :param trenutniCvor: Trenutni čvor u nizu rekurzija
+        :param put: Do sada nađeni put
+        """
         # označi trenutni čvor posjećenim
         trenutniCvor._posjecen = True
         put.append(trenutniCvor)
 
         # ako se došlo do krajnjeg čvora to je jedan put
         if trenutniCvor == self.krajnjiCvor:
-            #dodaje se uređena trojka
-            devijacija=self.izracunajDevijacijuNaPutu(put)
-            trajanje=self.izracunajTrajanjeNaPutu(put)
-            self.sviPuteviSaTrajanjemIDevijacijom.append((put[:],trajanje,devijacija))
+            # dodaje se uređena trojka
+            devijacija = self.izracunajDevijacijuNaPutu(put)
+            trajanje = self.izracunajTrajanjeNaPutu(put)
+            self.sviPuteviSaTrajanjemIDevijacijom.append((put[:], trajanje, devijacija))
         else:
             # idi kroz njegove sljedbenike, tj aktivnost.krajnjiCvor (to su sljedbenici)
             for aktivnost in trenutniCvor.izlazneAktivnosti:
@@ -629,15 +615,13 @@ class Pert:
         put.pop()
         trenutniCvor._posjecen = False
 
-    # todo Kako raditi kada ima više kritičnih puteva? Da li treba za svaki kritični put računati varijansu?
     def izracunajDevijacijuNaKriticnomPutu(self):
         """
-        Računa devijaciju na kritičnom putu sa najmanje aktivnosti
+        Računa devijaciju na kritičnom putu sa najmanjim brojem aktivnosti.
         """
         varijansa = 0
         kriticniPut = min(self.kriticniPutevi, key=lambda i: len(i))
 
-        # kriticniPut = self.kriticniPutevi[0]
         for i in range(1, len(kriticniPut)):
             # kritična aktivnost povezuje dva kritična događaja
             prviCvor = kriticniPut[i - 1]
@@ -647,18 +631,19 @@ class Pert:
 
         self._devijacijaNaKriticnomPutu = math.sqrt(varijansa)
 
-    #todo Dodano 3.5
-    #Da bi procjena trajanja bila što pouzdanija treba naći najveću devijaciju prolazeći kor sve puteve, bilo kritične ili subkritične
-    def izracunajDevijacijuNaPutu(self, put:list) -> decimal:
+    # Da bi procjena trajanja bila što pouzdanija treba naći najveću devijaciju prolazeći kor sve puteve,
+    # bilo kritične ili subkritične
+    def izracunajDevijacijuNaPutu(self, put: list) -> decimal:
         """
-        Računa devijaciju na zadanom putu
+        Računa devijaciju na zadanom putu.
+
         :param put: Put na kojem se računa devijacija
         """
         varijansa = 0
         for i in range(1, len(put)):
             prviCvor = put[i - 1]
             drugiCvor = put[i]
-            #pronalazak aktivnosti koja povezuje prvi i drugi čvor
+            # pronalazak aktivnosti koja povezuje prvi i drugi čvor
             aktivnost = next((x for x in prviCvor.izlazneAktivnosti if x.krajnjiCvor == drugiCvor), None)
             if aktivnost is not None:
                 varijansa += aktivnost.varijansa
@@ -676,7 +661,6 @@ class Pert:
         self.izracunajNajranijaVremena()
         self.izracunajNajkasnijaVremena()
         self.izracunajTrajanjeProjekta()
-        # self.izracunajNajranijaINajkasnijaVremena()
         self.izracunajRezerveCvorova()
         self.izracunajRezerveAktivnosti()
         self.odrediKriticnePuteve(self.pocetniCvor, [])
@@ -706,43 +690,43 @@ class Pert:
         self._trajanjeProjekta = self.krajnjiCvor.najkasnijeVrijeme - self.pocetniCvor.najranijeVrijeme
         return self.trajanjeProjekta
 
-    # todo dodano 3.5
-    def izracunajTrajanjeNaPutu(self, put:list) -> decimal:
+    def izracunajTrajanjeNaPutu(self, put: list) -> decimal:
         """
-        Računa trajanje aktivnosti na putu kao zbir trajanja svih aktivnosti na putu.
+        Računa trajanje jednog puta u grafu kao zbir trajanja svih aktivnosti na putu.
 
+        :param put: Put za koji se računa trajanje
         :return: Trajanje aktivnosti na putu
         """
-        trajanje =0
-        for i in range(0,len(put)):
+        trajanje = 0
+        for i in range(0, len(put)):
             prviCvor = put[i - 1]
             drugiCvor = put[i]
             # pronalazak aktivnosti koja povezuje prvi i drugi čvor
             aktivnost = next((x for x in prviCvor.izlazneAktivnosti if x.krajnjiCvor == drugiCvor), None)
             if aktivnost is not None:
-                trajanje+=aktivnost.trajannje
+                trajanje += aktivnost.trajannje
         return trajanje
 
     def izracunajProcjenuTrajanjaProjekta(self, p: decimal) -> decimal:
         """
-        Računa trajanje projekta za zadanu vjerovatnoću Ts=Te+sigma*Fi^-1(P) na kritičnom putu
+        Računa trajanje projekta za zadanu vjerovatnoću Ts=Te+sigma*Fi^-1(P) na kritičnom putu.
 
         :param p: Vjerovatnoća sa kojom se procjenjuje trajanje projekta
+        :return: Procijenjeno trajanje projekta za zadanu vjerovatnoću
         """
-        # return self.trajanjeProjekta + self._devijacijaNaKriticnomPutu * Pert.izracunajInverznoFi(p)
         return self.trajanjeProjekta + self._devijacijaNaKriticnomPutu * norm.ppf(p)
 
-    #todo dodano 3.5
     def izracunajNajduzuProcjenuTrajanjaProjekta(self, p: decimal) -> decimal:
         """
         Računa najduže trajanje projekta na svim putevima, za zadanu vjerovatnoću Ts=Te+sigma*Fi^-1(P)
 
         :param p: Vjerovatnoća sa kojom se procjenjuje trajanje projekta
+        :return: Najduže procijenjeno trajanje projekta za zadanu vjerovatnoću
         """
-        fi= norm.ppf(p)
-        niz=[]
+        fi = norm.ppf(p)
+        niz = []
         for tuple in self.sviPuteviSaTrajanjemIDevijacijom:
-            niz.append(tuple[1]+tuple[2]*fi)
+            niz.append(tuple[1] + tuple[2] * fi)
         return max(niz)
 
     # todo ovo nisam siguran
@@ -764,19 +748,24 @@ class Pert:
         string += "Kritični putevi: \n" + self.dajStirngKriticnihPuteva()
         return string
 
-    # todo dodano 3.5
-    def dajStringSvihPuteva(self)->str:
-        rezultat=""
+    def dajStringSvihPuteva(self) -> str:
+        """
+        Predstavlja puteve u grafu pomoću stringa.
+
+        :return: String svih puteva
+        """
+        rezultat = ""
         for tuple in self.sviPuteviSaTrajanjemIDevijacijom:
-            string=""
+            string = ""
             for cvor in tuple[0]:
-                string+=str(cvor.brojCvora)+ " - "
+                string += str(cvor.brojCvora) + " - "
             string = string[:-3]
-            rezultat+=string+" Trajanje: "+str(tuple[1])+ " Devijacija: "+str(tuple[2]) +"\n"
+            rezultat += string + " Trajanje: " + str(tuple[1]) + " Devijacija: " + str(tuple[2]) + "\n"
         return rezultat
 
     def dajStringKolekcije(self, kolekcija: list) -> str:
         """
+        Pretvara proslijeđenu listu u string koji se može ispisati.
 
         :param kolekcija: Lista čvorova ili lista aktivnosti u grafu.
         :return: String sa svim elementima iz kolekcije.
@@ -788,6 +777,7 @@ class Pert:
 
     def dajStirngKriticnihPuteva(self) -> str:
         """
+        Pretvara kritične puteve u stirng koji se može prikazati.
 
         :return: Stirng naziva aktivnosti na kritičnim putevima
         """
@@ -810,7 +800,7 @@ class Pert:
 
     def __contains__(self, item) -> bool:
         """
-        Da li se item nalazi u grafu.
+        Provjerava da li se item nalazi u grafu.
 
         :param item: Klasa Cvor ili klasa Aktivnost
         :return: Vraća True ako je čvor ili aktivnost u grafu
