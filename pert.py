@@ -34,9 +34,12 @@ class Cvor:
     # inicijalizacija čvora
     def __init__(self, brojCvora: int):
         """
+        Kreira čvor sa zadanim brojem čvora. Baca izuzetak ako brojCvora nije cijeli broj.
 
-        :param brojCvora: Jedinstvena oznaka čvora
+        :param brojCvora: Jedinstvena oznaka čvora, koja treba biti cijeli broj.
         """
+        if not isinstance(brojCvora, int):
+            raise ValueError("Broj čvora treba biti cijeli broj")
         self._brojCvora = brojCvora
         self._ulazneAktivnosti = []
         self._izlazneAktivnosti = []
@@ -53,6 +56,8 @@ class Cvor:
 
     @brojCvora.setter
     def brojCvora(self, value: int):
+        if not isinstance(value, int):
+            raise ValueError("Broj čvora treba biti cijeli broj")
         self._brojCvora = value
 
     @property
