@@ -284,6 +284,10 @@ class Pert:
         return self._kriticniPutevi
 
     @property
+    def devijacijaNaKriticnomPutu(self):
+        return self._devijacijaNaKriticnomPutu
+
+    @property
     def sviPuteviSaTrajanjemIDevijacijom(self) -> list:
         return self._sviPuteviSaTrajanjemIDevijacijom
 
@@ -327,10 +331,24 @@ class Pert:
     def krajnjiCvor(self, value):
         self._krajnjiCvor = value
 
+    #todo dodati funkciju getBrojCvorova i getBrojGrana i refaktorisati i ovaj kod i testove da se umjesto len(self.cvorovi) koriste ove funkcije
+    def getBrojCvorova(self):
+        return len(self.cvorovi)
+
+    def getBrojAktivnosti(self):
+        return len(self.aktivnosti)
+    #todo možda dodati i funkciju koje će primati broj cvora, a vratiti taj cvor
+    def getCvorSaBrojem(self,i:int)->Cvor:
+        lista = list(filter(lambda x: x.brojCvora == i, self.cvorovi))
+        if len(lista)==0:
+            raise ValueError("Cvor sa brojem "+str(i)+" ne postoji!")
+        return lista[0]
+    #
+
     # dodaje novu aktivnost u graf
     def dodajAktivnost(self, novaAktivnost: Aktivnost):
         if self.__contains__(novaAktivnost):
-            raise UserWarning("Aktivnost već postoji, nije je moguće dodati")
+            raise ValueError("Aktivnost već postoji, nije je moguće dodati")
         else:
             self.aktivnosti.append(novaAktivnost)
 
@@ -362,7 +380,8 @@ class Pert:
             # ako ima samo jedan preduvjet onda mora biti vezana za krajnji čvor prethodne aktivnosti
             elif len(aktivnost.preduvjeti) == 1:
                 # pronalazak preduvjetne aktivnosti u listi aktivnosti
-                prethodnaAktivnost = next((x for x in self.aktivnosti if x.naziv == aktivnost.preduvjeti[0]), None)
+                prethodnaAktivnost = self.dajAktivnostiIzListeNaziva(aktivnost.preduvjeti)[0]
+                # prethodnaAktivnost = next((x for x in self.aktivnosti if x.naziv == aktivnost.preduvjeti[0]), None)
                 aktivnost.pocetniCvor = prethodnaAktivnost.krajnjiCvor
                 prethodnaAktivnost.krajnjiCvor.izlazneAktivnosti.append(aktivnost)
                 cvor = Cvor.noviCvor()
@@ -381,11 +400,14 @@ class Pert:
                     aktivnostSaIstimPreduvjetima.pocetniCvor.izlazneAktivnosti.append(aktivnost)
                     aktivnost.pocetniCvor = aktivnostSaIstimPreduvjetima.pocetniCvor
                 else:
-                    # pronalazak svih preduvjetnih aktivnosti
-                    nizPreduvjeta = []
-                    for i in range(0, len(aktivnost.preduvjeti)):
-                        nizPreduvjeta.append(
-                            next((x for x in self.aktivnosti if x.naziv == aktivnost.preduvjeti[i]), None))
+                    #todo 5.5
+                    nizPreduvjeta=self.dajAktivnostiIzListeNaziva(aktivnost.preduvjeti)
+                    #
+                    # # pronalazak svih preduvjetnih aktivnosti
+                    # nizPreduvjeta = []
+                    # for i in range(0, len(aktivnost.preduvjeti)):
+                    #     nizPreduvjeta.append(
+                    #         next((x for x in self.aktivnosti if x.naziv == aktivnost.preduvjeti[i]), None))
 
                     # cvor je novododani kraj fiktivnih aktivnosti, a početak stvarne aktivnosti
                     cvor = Cvor.noviCvor()
@@ -404,24 +426,40 @@ class Pert:
                 self.__dodajCvor(krCvor)
                 aktivnost.krajnjiCvor = krCvor
                 krCvor.ulazneAktivnosti.append(aktivnost)
-        self.odrediKrajnjiCvor()
+        # self.odrediKrajnjiCvor()
 
-    def odrediKrajnjiCvor(self):
+    def dajAktivnostiIzListeNaziva(self, nazivi:list[str]):
         """
-        Određuje krajnji čvor.
-        Krajnji čvor je čvor iz kojeg ne izlazi niti jedna aktivnost.
+        Vraća listu objekta aktivnosti sa zadanim nazivom. Ako neka aktivnost ne postoji baca izuzetak
+
+        :param nazivi: Lista naziva aktivnosti
+        :return: Lista objekta aktivnosti sa zadanim nazivom
         """
-        for cvor in self.cvorovi:
-            if len(cvor.izlazneAktivnosti) == 0:
-                self.krajnjiCvor = cvor
-                return
+        nizPreduvjeta = []
+        for i in range(0, len(nazivi)):
+            # nizPreduvjeta.append(next((x for x in self.aktivnosti if x.naziv == nazivi[i]), None))
+            lista= list(filter(lambda x: x.naziv == nazivi[i], self.aktivnosti))
+            if len(lista)!=1:
+                raise ValueError("Aktivnost sa nazivom: "+nazivi[i]+" ne postoji.")
+            aktivnost=lista[0]
+            nizPreduvjeta.append(aktivnost)
+        return nizPreduvjeta
+
+    # todo ova funkcija je višak jer se ovo svakako radi u funkciji svediNaJedanKraj
+    # def odrediKrajnjiCvor(self):
+    #     """
+    #     Određuje krajnji čvor.
+    #     Krajnji čvor je čvor iz kojeg ne izlazi niti jedna aktivnost.
+    #     """
+    #     for cvor in self.cvorovi:
+    #         if len(cvor.izlazneAktivnosti) == 0:
+    #             self.krajnjiCvor = cvor
+    #             return
 
     def izbaciNepotrebneCvorove(self):
         """
         Skraćuje mrežni dijagram izbacivanjem nepotrebnih čvorova.
         """
-        # svođenje više krajnjih čvorova na samo jedan
-        zadnjiCvor = Cvor.noviCvor()
         cvoroviZaBrisanje = []
         krajnjiCvorovi = []
         aktivnostiZaBrisanje = []
@@ -434,15 +472,15 @@ class Pert:
             if len(cvor.ulazneAktivnosti) == 2:
                 a1 = cvor.ulazneAktivnosti[0]
                 a2 = cvor.ulazneAktivnosti[1]
-                # pošto se a1 briše, ako iz njenog početnog čvora izlazi stvarna aktivnost onda se treba a2 brisati
-                # tj. zamijeniti uloga a1 i a2, kako bi se izbjegli nepotrebni čvorovi
-                for akt in a1.pocetniCvor.izlazneAktivnosti:
-                    if akt.naziv != "fiktivna":
-                        pomocna = a1
-                        a1 = a2
-                        a2 = pomocna
-                        break
                 if a1.naziv == "fiktivna" and a2.naziv == "fiktivna":
+                    # pošto se a1 briše, ako iz njenog početnog čvora izlazi stvarna aktivnost onda se treba a2 brisati
+                    # tj. zamijeniti uloga a1 i a2, kako bi se izbjegli nepotrebni čvorovi
+                    for akt in a1.pocetniCvor.izlazneAktivnosti:
+                        if akt.naziv != "fiktivna":
+                            pomocna = a1
+                            a1 = a2
+                            a2 = pomocna
+                            break
                     # preusmjeravanje
                     a1.pocetniCvor.izlazneAktivnosti.remove(a1)
                     a1.pocetniCvor.izlazneAktivnosti.extend(a1.krajnjiCvor.izlazneAktivnosti)
@@ -452,45 +490,9 @@ class Pert:
                     a1.pocetniCvor.ulazneAktivnosti.append(a2)
                     cvoroviZaBrisanje.append(a1.krajnjiCvor)
                     aktivnostiZaBrisanje.append(a1)
-            ## todo ovo nije ok
-            # #ako iz čvora samo izlazi jedna fiktivna aktivnost onda je taj čvor višak
-            # # njegove ulazne aktivnosti samo proslijediti u taj sljedeći čvor
-            # if len(cvor.izlazneAktivnosti)==1 and cvor.izlazneAktivnosti[0].naziv=="fiktivna":
-            #     a= cvor.izlazneAktivnosti[0]
-            #     # preusmjeravanje
-            #     cvor.izlazneAktivnosti.remove(a)
-            #     a.krajnjiCvor.ulazneAktivnosti.extend(cvor.ulazneAktivnosti)
-            #     for akt in cvor.ulazneAktivnosti:
-            #         akt.krajnjiCvor = a.krajnjiCvor
-            #     cvoroviZaBrisanje.append(cvor)
-            #     aktivnostiZaBrisanje.append(a)
 
-        # svođenje na jedan krajnji cvor
-        # ako ima više aktivnosti koje izlaze iz jednog čvora, a barem dvije te aktivnosti završavaju u nekom od krajnjih čvorova
-        # tada se mora dodati novi čvor, jer se aktivnosti ne smiju preklopiti
-        # u drugom slučaju samo preusmjeriti sve aktivnosti u jedan čvor
-        predzadnjiCvorovi = []
-        dodatiKraj = False
-        for cvor in krajnjiCvorovi:
-            for aktivnost in cvor.ulazneAktivnosti:
-                if predzadnjiCvorovi.__contains__(aktivnost.pocetniCvor):
-                    dodatiKraj = True
-                    break
-                predzadnjiCvorovi.append(aktivnost.pocetniCvor)
-        for cvor in krajnjiCvorovi:
-            if dodatiKraj:
-                fiktivnaAktivnost = Aktivnost("fiktivna", [], 0, 0, 0)
-                self.aktivnosti.append(fiktivnaAktivnost)
-                cvor.izlazneAktivnosti.append(fiktivnaAktivnost)
-                fiktivnaAktivnost.pocetniCvor = cvor
-                fiktivnaAktivnost.krajnjiCvor = zadnjiCvor
-                zadnjiCvor.ulazneAktivnosti.append(fiktivnaAktivnost)
-            else:
-                # sve aktivnosti preusmjeriti u jedan kraj
-                zadnjiCvor.ulazneAktivnosti.extend(cvor.ulazneAktivnosti)
-                for aktivnost in cvor.ulazneAktivnosti:
-                    aktivnost.krajnjiCvor = zadnjiCvor
-                cvoroviZaBrisanje.append(cvor)
+        # svođenje više krajnjih čvorova na samo jedan
+        cvoroviZaBrisanje.extend(self.svediNaJedanKraj(krajnjiCvorovi))
 
         # obrisati viška aktivnosti
         for cvor in aktivnostiZaBrisanje:
@@ -499,8 +501,51 @@ class Pert:
         # obrisati viška čvorove
         for cvor in cvoroviZaBrisanje:
             self.cvorovi.remove(cvor)
+
+    # Ovo bi trebalo biti privatna funkcija, ali nisam je stavio kao privatnu da bi je mogao testirati
+    def svediNaJedanKraj(self, krajnjiCvorovi:list):
+        """
+        Funkcija svodi više krajnjih čvorova na samo jedan.
+
+        :param krajnjiCvorovi: Cvorovi u grafu iz kojih ne izlazi niti jedna aktivnost
+        :return: Cvorove koje treba izbaciti, ukoliko je graf skraćen. Inače vraća [].
+        """
+        #ako ima samo jedan kraj onda se ne treba ništa skraćivati
+        if len(krajnjiCvorovi)==1:
+            self.krajnjiCvor=krajnjiCvorovi[0]
+            return []
+
+        zadnjiCvor = Cvor.noviCvor()
+        cvoroviZaBrisanje = []
+        predzadnjiCvorovi = []
+        dodatiKraj = False
+        for cvor in krajnjiCvorovi:
+            for aktivnost in cvor.ulazneAktivnosti:
+                # ako ima više aktivnosti koje izlaze iz jednog čvora, a barem dvije te aktivnosti završavaju u nekom od krajnjih čvorova
+                # tada se mora dodati novi čvor, jer se aktivnosti ne smiju preklopiti
+                if predzadnjiCvorovi.__contains__(aktivnost.pocetniCvor):
+                    dodatiKraj = True
+                    break
+                predzadnjiCvorovi.append(aktivnost.pocetniCvor)
+
+        for cvor in krajnjiCvorovi:
+            if dodatiKraj:
+                fiktivnaAktivnost = Aktivnost("fiktivna", [], 0, 0, 0)
+                self.aktivnosti.append(fiktivnaAktivnost)
+                cvor.izlazneAktivnosti.append(fiktivnaAktivnost)
+                fiktivnaAktivnost.pocetniCvor = cvor
+                fiktivnaAktivnost.krajnjiCvor = zadnjiCvor
+                zadnjiCvor.ulazneAktivnosti.append(fiktivnaAktivnost)
+            # u drugom slučaju samo preusmjeriti sve aktivnosti u jedan čvor novi čvor, a sve dosadašnje krajeve obrisati
+            else:
+                # sve aktivnosti preusmjeriti u jedan kraj
+                zadnjiCvor.ulazneAktivnosti.extend(cvor.ulazneAktivnosti)
+                for aktivnost in cvor.ulazneAktivnosti:
+                    aktivnost.krajnjiCvor = zadnjiCvor
+                cvoroviZaBrisanje.append(cvor)
         self.__dodajCvor(zadnjiCvor)
         self.krajnjiCvor = zadnjiCvor
+        return cvoroviZaBrisanje
 
     def renumerisiCvorove(self):
         """
@@ -765,7 +810,7 @@ class Pert:
             for cvor in tuple[0]:
                 string += str(cvor.brojCvora) + " - "
             string = string[:-3]
-            rezultat += string + " Trajanje: " + str(tuple[1]) + " Devijacija: " + str(tuple[2]) + "\n"
+            rezultat += string + " Trajanje: " + str(tuple[1]) + " Devijacija: " + str(round(tuple[2], 2)) + "\n"
         return rezultat
 
     def dajStringKolekcije(self, kolekcija: list) -> str:
@@ -780,6 +825,7 @@ class Pert:
             string += str(clan) + "\n"
         return string
 
+    #todo ova fun i dajStringSvihPuteva se mogu mergat u jednu dajStringPuteva(putevi:list)
     def dajStirngKriticnihPuteva(self) -> str:
         """
         Pretvara kritične puteve u stirng koji se može prikazati.
@@ -814,25 +860,27 @@ class Pert:
                 isinstance(item, Aktivnost) and (item in self.aktivnosti))
 
 
+
 if __name__ == "__main__":
-    graf = Pert()
-    graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
-    graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
-    graf.dodajAktivnost(Aktivnost("C", ["B"], 4, 5, 12))
-    graf.dodajAktivnost(Aktivnost("D", ["B"], 9, 10, 11))
-    graf.dodajAktivnost(Aktivnost("E", ["B"], 19, 19, 19))
-    graf.dodajAktivnost(Aktivnost("F", ["C", "D"], 12, 12, 12))
-    graf.dodajAktivnost(Aktivnost("G", ["E", "F"], 6, 7, 14))
-    graf.dodajAktivnost(Aktivnost("H", ["E", "F"], 2, 4, 24))
-    graf.dodajAktivnost(Aktivnost("I", ["G"], 2, 4, 6))
-    graf.dodajAktivnost(Aktivnost("J", ["G", "H"], 3, 3, 3))
-    graf.azurirajGraf()
-    print(graf)
-    print("TEST svih puteva\n")
-    print(graf.dajStringSvihPuteva())
-    print(graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.25))
-    print(graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.75))
-    print(graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.9987))
+    print("ok")
+    # graf = Pert()
+    # graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
+    # graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
+    # graf.dodajAktivnost(Aktivnost("C", ["B"], 4, 5, 12))
+    # graf.dodajAktivnost(Aktivnost("D", ["B"], 9, 10, 11))
+    # graf.dodajAktivnost(Aktivnost("E", ["B"], 19, 19, 19))
+    # graf.dodajAktivnost(Aktivnost("F", ["C", "D"], 12, 12, 12))
+    # graf.dodajAktivnost(Aktivnost("G", ["E", "F"], 6, 7, 14))
+    # graf.dodajAktivnost(Aktivnost("H", ["E", "F"], 2, 4, 24))
+    # graf.dodajAktivnost(Aktivnost("I", ["G"], 2, 4, 6))
+    # graf.dodajAktivnost(Aktivnost("J", ["G", "H"], 3, 3, 3))
+    # graf.azurirajGraf()
+    # print(graf)
+    # print("TEST svih puteva\n")
+    # print(graf.dajStringSvihPuteva())
+    # print(graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.25))
+    # print(graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.75))
+    # print(graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.9987))
 
     # test izbacivanje viška čvorova
     # graf = Pert()
