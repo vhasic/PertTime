@@ -163,6 +163,7 @@ class TestoviAktivnosti(unittest.TestCase):
 class TestoviPertKlase(unittest.TestCase):
     # ova se metoda izvršava prije svakog testa
     def setUp(self):
+        Cvor.brojac=0
         self.graf = Pert()
         self.graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
         self.graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
@@ -187,9 +188,7 @@ class TestoviPertKlase(unittest.TestCase):
         self.assertEqual(self.graf.getBrojAktivnosti(), 16)
 
     def testGetCvorSaBrojem(self):
-        graf=Pert()
-        graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
-        cvor = graf.getCvorSaBrojem(1)
+        cvor = self.graf.getCvorSaBrojem(1)
         self.assertIsNotNone(cvor)
         self.assertIsInstance(cvor, Cvor)
 
@@ -271,46 +270,44 @@ class TestoviPertKlase(unittest.TestCase):
 
     #todo zbog redolsijeda izvršavanja testova ova 3 testa padaju
     #pomoćna funkcija
-    def kreirajGraf(self):
-        graf = Pert()
-        graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
-        graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
-        graf.dodajAktivnost(Aktivnost("C", ["B"], 4, 5, 12))
-        graf.dodajAktivnost(Aktivnost("D", ["B"], 9, 10, 11))
-        graf.dodajAktivnost(Aktivnost("E", ["B"], 19, 19, 19))
-        graf.dodajAktivnost(Aktivnost("F", ["C", "D"], 12, 12, 12))
-        graf.dodajAktivnost(Aktivnost("G", ["E", "F"], 6, 7, 14))
-        graf.dodajAktivnost(Aktivnost("H", ["E", "F"], 2, 4, 24))
-        graf.dodajAktivnost(Aktivnost("I", ["G"], 2, 4, 6))
-        graf.dodajAktivnost(Aktivnost("J", ["G", "H"], 3, 3, 3))
-        graf.kreirajStrukturu()
-        return graf
+    # def kreirajGraf(self):
+    #     graf = Pert()
+    #     Cvor.brojac=0
+    #     graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
+    #     graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
+    #     graf.dodajAktivnost(Aktivnost("C", ["B"], 4, 5, 12))
+    #     graf.dodajAktivnost(Aktivnost("D", ["B"], 9, 10, 11))
+    #     graf.dodajAktivnost(Aktivnost("E", ["B"], 19, 19, 19))
+    #     graf.dodajAktivnost(Aktivnost("F", ["C", "D"], 12, 12, 12))
+    #     graf.dodajAktivnost(Aktivnost("G", ["E", "F"], 6, 7, 14))
+    #     graf.dodajAktivnost(Aktivnost("H", ["E", "F"], 2, 4, 24))
+    #     graf.dodajAktivnost(Aktivnost("I", ["G"], 2, 4, 6))
+    #     graf.dodajAktivnost(Aktivnost("J", ["G", "H"], 3, 3, 3))
+    #     graf.kreirajStrukturu()
+    #     return graf
 
     #
     # test prolazi kroz grane: 1-2-3-4-5-6-7- 3-4-6-7-8- 9-10-11-12-13-11-12-13-15-16- 9-10-14-15-16-17
     def testSvodjenjaNaJedanKraj1(self):
-        graf=self.kreirajGraf()
-        krajnjiCvorovi = [graf.getCvorSaBrojem(12), graf.getCvorSaBrojem(14)]
+        krajnjiCvorovi = [self.graf.getCvorSaBrojem(12), self.graf.getCvorSaBrojem(14)]
 
-        cvoroviZaBrisanje = graf.svediNaJedanKraj(krajnjiCvorovi)
+        cvoroviZaBrisanje = self.graf.svediNaJedanKraj(krajnjiCvorovi)
         self.assertEqual(len(cvoroviZaBrisanje), 2)
-        self.assertEqual(graf.krajnjiCvor, graf.getCvorSaBrojem(15))
+        self.assertEqual(self.graf.krajnjiCvor, self.graf.getCvorSaBrojem(15))
 
     def testSvodjenjaNaJedanKraj2(self):
-        graf = self.kreirajGraf()
         # ovo će obrisati više krajeva
-        graf.izbaciNepotrebneCvorove()
-        krajnjiCvorovi = [graf.getCvorSaBrojem(15)]
+        self.graf.izbaciNepotrebneCvorove()
+        krajnjiCvorovi = [self.graf.getCvorSaBrojem(15)]
 
-        cvoroviZaBrisanje = graf.svediNaJedanKraj(krajnjiCvorovi)
+        cvoroviZaBrisanje = self.graf.svediNaJedanKraj(krajnjiCvorovi)
         self.assertEqual(len(cvoroviZaBrisanje), 0)
-        self.assertEqual(graf.krajnjiCvor, graf.getCvorSaBrojem(15))
+        self.assertEqual(self.graf.krajnjiCvor, self.graf.getCvorSaBrojem(15))
 
     def testSvodjenjaNaJedanKraj3(self):
-        graf = self.kreirajGraf()
-        krajnjiCvorovi = [graf.getCvorSaBrojem(10), graf.getCvorSaBrojem(11)]
+        krajnjiCvorovi = [self.graf.getCvorSaBrojem(10), self.graf.getCvorSaBrojem(11)]
 
-        cvoroviZaBrisanje = graf.svediNaJedanKraj(krajnjiCvorovi)
+        cvoroviZaBrisanje = self.graf.svediNaJedanKraj(krajnjiCvorovi)
         self.assertEqual(len(cvoroviZaBrisanje), 0)
 
     def testRenumerisiCvorove(self):

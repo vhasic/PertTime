@@ -273,7 +273,7 @@ class Pert:
         self._krajnjiCvor = None  # krajnji čvor u dijagramu
         self._kriticniPutevi = []  # lista kritičnih puteva u dijagramu
         self._trajanjeProjekta = 0  # očekivano trajanje projekta
-        self._procijenjenoVrijemeTrajanja = 0  # trajanje projekta koje se računa na zahtjev sa određenom vjerovatnoćom
+        # self._procijenjenoVrijemeTrajanja = 0  # trajanje projekta koje se računa na zahtjev sa određenom vjerovatnoćom
         self._devijacijaNaKriticnomPutu = 0  # standarda devijacija aktivnosti na kritičnom putu
         self._sviPuteviSaTrajanjemIDevijacijom = []  # lista uređenih trojki (put, Te, sigma) svih puteva od početka do
         # kraja, sa njihovim očekivanim trajanjem i devijacijom
@@ -295,25 +295,25 @@ class Pert:
     def trajanjeProjekta(self) -> decimal:
         return self._trajanjeProjekta
 
-    @property
-    def procijenjenoTrajanjeProjekta(self) -> decimal:
-        return self._procijenjenoVrijemeTrajanja
+    # @property
+    # def procijenjenoTrajanjeProjekta(self) -> decimal:
+    #     return self._procijenjenoVrijemeTrajanja
 
     @property
     def cvorovi(self):
         return self._cvorovi
 
-    @cvorovi.setter
-    def cvorovi(self, value):
-        self._cvorovi = value
+    # @cvorovi.setter
+    # def cvorovi(self, value):
+    #     self._cvorovi = value
 
     @property
     def aktivnosti(self):
         return self._aktivnosti
 
-    @aktivnosti.setter
-    def aktivnosti(self, value):
-        self._aktivnosti = value
+    # @aktivnosti.setter
+    # def aktivnosti(self, value):
+    #     self._aktivnosti = value
 
     @property
     def pocetniCvor(self) -> Cvor:
@@ -861,7 +861,7 @@ class Pert:
 
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print("ok")
     # graf = Pert()
     # graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
