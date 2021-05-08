@@ -1,15 +1,13 @@
 import unittest
-from pert import Pert
+
 from pert import Aktivnost
 from pert import Cvor
+from pert import Pert
 
 
-# todo odrediti najbolji način za testiranje
 # Strukturalno (White box testiranje)
 
-
 # Inkrementalno bottom up testiranje
-
 class TestoviCvora(unittest.TestCase):
     # ova se metoda izvršava prije svakog testa
     def setUp(self):
@@ -163,7 +161,7 @@ class TestoviAktivnosti(unittest.TestCase):
 class TestoviPertKlase(unittest.TestCase):
     # ova se metoda izvršava prije svakog testa
     def setUp(self):
-        Cvor.brojac=0
+        Cvor.brojac = 0
         self.graf = Pert()
         self.graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
         self.graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
@@ -179,7 +177,7 @@ class TestoviPertKlase(unittest.TestCase):
 
     # ova metoda se izvršava nakon svakog testa
     def tearDown(self):
-        self.graf=None
+        self.graf = None
 
     def testGetBrojCvorova(self):
         self.assertEqual(self.graf.getBrojCvorova(), 14)
@@ -207,8 +205,8 @@ class TestoviPertKlase(unittest.TestCase):
     # todo za ovu metodu nacrtati graf i testirati minimalni obuhvat puteva
 
     # Ciklomatska kompleksnost
-    # Pert.izbaciNepotrebneCvorove - C(17)
-    # Pert.kreirajStrukturu - C(13)
+    # Pert.izbaciNepotrebneCvorove - C(11)
+    # Pert.kreirajStrukturu - C(8)
 
     # todo napraviti test i za ovo: Ne smije mi se algoritam zbuniti
     # Provjeri sam 5.5 on ovo svede na pravilan oblik, ali mi u ovom primjeru iz čvora 2 izlaze aktivnost B i fiktivna koje se preklapaju
@@ -261,30 +259,10 @@ class TestoviPertKlase(unittest.TestCase):
     # test prolazi kroz grane:1-2-3-4-5-6-7-8-9-10-11- 7-8-10-11-12-13-14-15-16-17-18-19-20- 2-3-5-6-7-8-10-11-12-13-17-18-19-20-
     # 2-3-5-6-7-8-10-11-12-18-19-20- 2-3-5-6-19-20- 21-22-23--21-22-23- 24-25-26-24-25-26-27
     def testIzbacivanjaNepotrebnihCvorova(self):
-        # aktivnosti su postavljene u setUp funkciji
-        # self.graf.kreirajStrukturu()
         self.graf.izbaciNepotrebneCvorove()
         # broj čvorova treba biti smanjen sa 14 na 10
         self.assertEqual(self.graf.getBrojCvorova(), 10)
         self.assertEqual(self.graf.getBrojAktivnosti(), 13)
-
-    #todo zbog redolsijeda izvršavanja testova ova 3 testa padaju
-    #pomoćna funkcija
-    # def kreirajGraf(self):
-    #     graf = Pert()
-    #     Cvor.brojac=0
-    #     graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
-    #     graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
-    #     graf.dodajAktivnost(Aktivnost("C", ["B"], 4, 5, 12))
-    #     graf.dodajAktivnost(Aktivnost("D", ["B"], 9, 10, 11))
-    #     graf.dodajAktivnost(Aktivnost("E", ["B"], 19, 19, 19))
-    #     graf.dodajAktivnost(Aktivnost("F", ["C", "D"], 12, 12, 12))
-    #     graf.dodajAktivnost(Aktivnost("G", ["E", "F"], 6, 7, 14))
-    #     graf.dodajAktivnost(Aktivnost("H", ["E", "F"], 2, 4, 24))
-    #     graf.dodajAktivnost(Aktivnost("I", ["G"], 2, 4, 6))
-    #     graf.dodajAktivnost(Aktivnost("J", ["G", "H"], 3, 3, 3))
-    #     graf.kreirajStrukturu()
-    #     return graf
 
     #
     # test prolazi kroz grane: 1-2-3-4-5-6-7- 3-4-6-7-8- 9-10-11-12-13-11-12-13-15-16- 9-10-14-15-16-17
@@ -322,7 +300,6 @@ class TestoviPertKlase(unittest.TestCase):
         graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
         b = Aktivnost("B", ["A"], 1, 2, 3)
         graf.dodajAktivnost(b)
-        # graf.dodajAktivnost(Aktivnost("C", ["B"], 1, 2, 3))
         graf.kreirajStrukturu()
         # preusmjeravam B da bih napravio petlju cvorova 1-2-1
         graf.cvorovi.remove(graf.cvorovi[2])
@@ -387,11 +364,6 @@ class TestoviPertKlase(unittest.TestCase):
         # zaokružuje na 2 decimale i poredi
         self.assertAlmostEqual(self.graf.devijacijaNaKriticnomPutu, 1.53, places=2)
 
-    # ovo se testira u sistemskim testovima
-    # def testAzurirajGraf(self):
-    #     pass
-
-    # todo
     def testIzracunajRezerveCvorova(self):
         self.graf.izbaciNepotrebneCvorove()
         self.graf.renumerisiCvorove()
@@ -399,9 +371,9 @@ class TestoviPertKlase(unittest.TestCase):
         self.graf.izracunajNajkasnijaVremena()
         self.graf.izracunajRezerveCvorova()
 
-        rezerve=[0,0,0,0,0,0,0,0,1,0]
+        rezerve = [0, 0, 0, 0, 0, 0, 0, 0, 1, 0]
         for i in range(self.graf.getBrojCvorova()):
-            self.assertEqual(self.graf.cvorovi[i].rezerva,rezerve[i])
+            self.assertEqual(self.graf.cvorovi[i].rezerva, rezerve[i])
 
     def testIzracunajRezerveAktivnosti(self):
         self.graf.izbaciNepotrebneCvorove()
@@ -410,29 +382,11 @@ class TestoviPertKlase(unittest.TestCase):
         self.graf.izracunajNajkasnijaVremena()
         self.graf.izracunajRezerveAktivnosti()
 
-        #todo provjeriti ovo što je rezerva negativna
-        rezerve = [0,0,4,0,3,0,0,2,0,1,0,1,-36]
+        # todo provjeriti ovo što je rezerva negativna
+        rezerve = [0, 0, 4, 0, 3, 0, 0, 2, 0, 1, 0, 1, -36]
         for i in range(self.graf.getBrojAktivnosti()):
             self.assertEqual(self.graf.aktivnosti[i].rezervaAktivnosti, rezerve[i])
 
-    #u sistemskim testovima
-    # def testIzracunajTrajanjeProjekta(self):
-    #     pass
-
-    # def testIzracunajTrajanjeNaPutu(self):
-    #     pass
-
-    #u sistemskim testovima
-    # def testIzracunajProcjenuTrajanjaProjekta(self):
-    #     pass
-
-    # def testIzracunajNajduzuProcjenuTrajanjaProjekta(self):
-    #     pass
-
-    # def testIzracunajVjerovatnocuZavrsetkaProjekta(self):
-    #     pass
-
-    # todo popraviti nakon što naprqavim da se devijacija prikazuje sa 2 decimale
     def testDajStringSvihPuteva(self):
         self.graf.izbaciNepotrebneCvorove()
         self.graf.renumerisiCvorove()
@@ -442,23 +396,20 @@ class TestoviPertKlase(unittest.TestCase):
         self.graf.izracunajRezerveCvorova()
         self.graf.odrediSvePuteve(self.graf.pocetniCvor, [])
         actual = self.graf.dajStringSvihPuteva()
-        expected="1 - 2 - 3 - 5 - 6 - 7 - 8 - 10 Trajanje: 36.0 Devijacija: 2.03\n" \
-                 "1 - 2 - 3 - 5 - 6 - 7 - 8 - 9 - 10 Trajanje: 35.0 Devijacija: 1.91\n" \
-                 "1 - 2 - 3 - 5 - 6 - 7 - 9 - 10 Trajanje: 34.0 Devijacija: 3.92\n" \
-                 "1 - 2 - 3 - 4 - 5 - 6 - 7 - 8 - 10 Trajanje: 40.0 Devijacija: 1.56\n" \
-                 "1 - 2 - 3 - 4 - 5 - 6 - 7 - 8 - 9 - 10 Trajanje: 39.0 Devijacija: 1.41\n" \
-                 "1 - 2 - 3 - 4 - 5 - 6 - 7 - 9 - 10 Trajanje: 38.0 Devijacija: 3.7\n" \
-                 "1 - 2 - 3 - 7 - 8 - 10 Trajanje: 37.0 Devijacija: 1.53\n" \
-                 "1 - 2 - 3 - 7 - 8 - 9 - 10 Trajanje: 36.0 Devijacija: 1.37\n" \
-                 "1 - 2 - 3 - 7 - 9 - 10 Trajanje: 35.0 Devijacija: 3.68\n"
-        self.assertEqual(actual,expected)
-
-    # def testDajStirngKriticnihPuteva(self):
-    #     pass
+        expected = "1 - 2 - 3 - 5 - 6 - 7 - 8 - 10 Trajanje: 36.0 Devijacija: 2.03\n" \
+                   "1 - 2 - 3 - 5 - 6 - 7 - 8 - 9 - 10 Trajanje: 35.0 Devijacija: 1.91\n" \
+                   "1 - 2 - 3 - 5 - 6 - 7 - 9 - 10 Trajanje: 34.0 Devijacija: 3.92\n" \
+                   "1 - 2 - 3 - 4 - 5 - 6 - 7 - 8 - 10 Trajanje: 40.0 Devijacija: 1.56\n" \
+                   "1 - 2 - 3 - 4 - 5 - 6 - 7 - 8 - 9 - 10 Trajanje: 39.0 Devijacija: 1.41\n" \
+                   "1 - 2 - 3 - 4 - 5 - 6 - 7 - 9 - 10 Trajanje: 38.0 Devijacija: 3.7\n" \
+                   "1 - 2 - 3 - 7 - 8 - 10 Trajanje: 37.0 Devijacija: 1.53\n" \
+                   "1 - 2 - 3 - 7 - 8 - 9 - 10 Trajanje: 36.0 Devijacija: 1.37\n" \
+                   "1 - 2 - 3 - 7 - 9 - 10 Trajanje: 35.0 Devijacija: 3.68\n"
+        self.assertEqual(actual, expected)
 
     def testDodavanjaAktivnostiSaIstimImenom(self):
         with self.assertRaisesRegex(ValueError, "Aktivnost već postoji, nije je moguće dodati"):
-            self.graf.dodajAktivnost(Aktivnost("F", ["A", "C"], 1,3,4))
+            self.graf.dodajAktivnost(Aktivnost("F", ["A", "C"], 1, 3, 4))
 
 
 # Sistemsko testiranje
@@ -488,17 +439,6 @@ class TestCitavogAlgoritma(unittest.TestCase):
         for aktivnost in kolekcija:
             graf.dodajAktivnost(aktivnost)
 
-
-    # #ova se metoda izvršava prije svakog testa
-    # def setUp(self):
-    #     self.graf = Pert()
-    #     TestCitavogAlgoritma.dodajAktivnosti(self.graf, TestCitavogAlgoritma.aktivnosti1)
-    #     self.graf.azurirajGraf()
-    #
-    # #ova metoda se izvršava nakon svakog testa
-    # def tearDown(self):
-    #     self.graf=None
-
     def testTrajanja1(self):
         self.graf = Pert()
         TestCitavogAlgoritma.dodajAktivnosti(self.graf, TestCitavogAlgoritma.aktivnosti1)
@@ -516,14 +456,6 @@ class TestCitavogAlgoritma(unittest.TestCase):
         # za vjerovatnoću 0.9987
         self.assertEqual(44.6, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.9987), 2))
 
-        # ovo je verzija bez skraćivanja
-        # # za vjerovatnoću 0.25
-        # self.assertEqual(38.95, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.25),2))
-        # # za vjerovatnoću 0.75
-        # self.assertEqual(41.05, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.75), 2))
-        # # za vjerovatnoću 0.9987
-        # self.assertEqual(44.71, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.9987), 2))
-
     def testIzracunajNajduzuProcjenuTrajanjaProjekta1(self):
         self.graf = Pert()
         TestCitavogAlgoritma.dodajAktivnosti(self.graf, TestCitavogAlgoritma.aktivnosti1)
@@ -533,7 +465,7 @@ class TestCitavogAlgoritma(unittest.TestCase):
         # za vjerovatnoću 0.75
         self.assertAlmostEqual(41.05, self.graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.75), 2)
         # za vjerovatnoću 0.9987
-        self.assertAlmostEqual(49.13, self.graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.9987),2)
+        self.assertAlmostEqual(49.13, self.graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.9987), 2)
 
     def testTrajanja2(self):
         self.graf = Pert()
@@ -546,9 +478,6 @@ class TestCitavogAlgoritma(unittest.TestCase):
         self.graf = Pert()
         TestCitavogAlgoritma.dodajAktivnosti(self.graf, TestCitavogAlgoritma.aktivnosti2)
         self.graf.azurirajGraf()
-        # ovo je za verziju bez izbacvanja čvorova
-        # ocekivano="A - C - fiktivna - F - H - fiktivna - J\nB - D - fiktivna - F - H - fiktivna - J\n"
-        # ovo je za verziju sa izbacivanjem
         ocekivano = "A - C - F - H - fiktivna - J\nB - D - fiktivna - F - H - fiktivna - J\n"
         self.assertEqual(ocekivano, self.graf.dajStirngKriticnihPuteva())
 
@@ -568,7 +497,6 @@ class TestCitavogAlgoritma(unittest.TestCase):
         self.graf.azurirajGraf()
         self.assertEqual(12.83, round(self.graf.trajanjeProjekta, 2))
 
-    # def testVjerovatnoceZavrsetkaProjektaUPredvidjenomRoku(self):
     def testIzracunajVjerovatnocuZavrsetkaProjekta(self):
         self.graf = Pert()
         TestCitavogAlgoritma.dodajAktivnosti(self.graf, TestCitavogAlgoritma.aktivnosti3)

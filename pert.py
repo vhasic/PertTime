@@ -12,8 +12,7 @@ getcontext().prec = 2
 getcontext().Emin = -10
 
 
-# todo Testirati white box testiranjem one bitnije funkcije poput kreiranja strukture, nalaženje kritičnog puta, najranija i najkasnija vremena
-# ostalo sa po jednim testom. Dodati graf white box testiranja u dokumentu. Dodati po primjer korištenja u stub dijelu.
+# todo Dodati graf white box testiranja u dokumentu. Dodati po primjer korištenja u stub dijelu.
 # Najvažnije dijelove koda prikazati kao jupiter notebook u dokumentu i opisati ih
 # Napraviti prostu formu sa text area u kojem se unose aktivnosti u CSV obliku naziv;preduvjet1,2,3;a;m;b
 # ta forma će imati dugme "izračunaj" koje kada se pritisne ovaj tekst se pokupi sa forme parsira sa npr pandas from csv, pozove se algoritam
@@ -273,7 +272,6 @@ class Pert:
         self._krajnjiCvor = None  # krajnji čvor u dijagramu
         self._kriticniPutevi = []  # lista kritičnih puteva u dijagramu
         self._trajanjeProjekta = 0  # očekivano trajanje projekta
-        # self._procijenjenoVrijemeTrajanja = 0  # trajanje projekta koje se računa na zahtjev sa određenom vjerovatnoćom
         self._devijacijaNaKriticnomPutu = 0  # standarda devijacija aktivnosti na kritičnom putu
         self._sviPuteviSaTrajanjemIDevijacijom = []  # lista uređenih trojki (put, Te, sigma) svih puteva od početka do
         # kraja, sa njihovim očekivanim trajanjem i devijacijom
@@ -295,25 +293,13 @@ class Pert:
     def trajanjeProjekta(self) -> decimal:
         return self._trajanjeProjekta
 
-    # @property
-    # def procijenjenoTrajanjeProjekta(self) -> decimal:
-    #     return self._procijenjenoVrijemeTrajanja
-
     @property
     def cvorovi(self):
         return self._cvorovi
 
-    # @cvorovi.setter
-    # def cvorovi(self, value):
-    #     self._cvorovi = value
-
     @property
     def aktivnosti(self):
         return self._aktivnosti
-
-    # @aktivnosti.setter
-    # def aktivnosti(self, value):
-    #     self._aktivnosti = value
 
     @property
     def pocetniCvor(self) -> Cvor:
@@ -331,19 +317,17 @@ class Pert:
     def krajnjiCvor(self, value):
         self._krajnjiCvor = value
 
-    #todo dodati funkciju getBrojCvorova i getBrojGrana i refaktorisati i ovaj kod i testove da se umjesto len(self.cvorovi) koriste ove funkcije
     def getBrojCvorova(self):
         return len(self.cvorovi)
 
     def getBrojAktivnosti(self):
         return len(self.aktivnosti)
-    #todo možda dodati i funkciju koje će primati broj cvora, a vratiti taj cvor
-    def getCvorSaBrojem(self,i:int)->Cvor:
+
+    def getCvorSaBrojem(self, i: int) -> Cvor:
         lista = list(filter(lambda x: x.brojCvora == i, self.cvorovi))
-        if len(lista)==0:
-            raise ValueError("Cvor sa brojem "+str(i)+" ne postoji!")
+        if len(lista) == 0:
+            raise ValueError("Cvor sa brojem " + str(i) + " ne postoji!")
         return lista[0]
-    #
 
     # dodaje novu aktivnost u graf
     def dodajAktivnost(self, novaAktivnost: Aktivnost):
@@ -400,14 +384,7 @@ class Pert:
                     aktivnostSaIstimPreduvjetima.pocetniCvor.izlazneAktivnosti.append(aktivnost)
                     aktivnost.pocetniCvor = aktivnostSaIstimPreduvjetima.pocetniCvor
                 else:
-                    #todo 5.5
-                    nizPreduvjeta=self.dajAktivnostiIzListeNaziva(aktivnost.preduvjeti)
-                    #
-                    # # pronalazak svih preduvjetnih aktivnosti
-                    # nizPreduvjeta = []
-                    # for i in range(0, len(aktivnost.preduvjeti)):
-                    #     nizPreduvjeta.append(
-                    #         next((x for x in self.aktivnosti if x.naziv == aktivnost.preduvjeti[i]), None))
+                    nizPreduvjeta = self.dajAktivnostiIzListeNaziva(aktivnost.preduvjeti)
 
                     # cvor je novododani kraj fiktivnih aktivnosti, a početak stvarne aktivnosti
                     cvor = Cvor.noviCvor()
@@ -426,9 +403,8 @@ class Pert:
                 self.__dodajCvor(krCvor)
                 aktivnost.krajnjiCvor = krCvor
                 krCvor.ulazneAktivnosti.append(aktivnost)
-        # self.odrediKrajnjiCvor()
 
-    def dajAktivnostiIzListeNaziva(self, nazivi:list[str]):
+    def dajAktivnostiIzListeNaziva(self, nazivi: list[str]):
         """
         Vraća listu objekta aktivnosti sa zadanim nazivom. Ako neka aktivnost ne postoji baca izuzetak
 
@@ -437,24 +413,12 @@ class Pert:
         """
         nizPreduvjeta = []
         for i in range(0, len(nazivi)):
-            # nizPreduvjeta.append(next((x for x in self.aktivnosti if x.naziv == nazivi[i]), None))
-            lista= list(filter(lambda x: x.naziv == nazivi[i], self.aktivnosti))
-            if len(lista)!=1:
-                raise ValueError("Aktivnost sa nazivom: "+nazivi[i]+" ne postoji.")
-            aktivnost=lista[0]
+            lista = list(filter(lambda x: x.naziv == nazivi[i], self.aktivnosti))
+            if len(lista) != 1:
+                raise ValueError("Aktivnost sa nazivom: " + nazivi[i] + " ne postoji.")
+            aktivnost = lista[0]
             nizPreduvjeta.append(aktivnost)
         return nizPreduvjeta
-
-    # todo ova funkcija je višak jer se ovo svakako radi u funkciji svediNaJedanKraj
-    # def odrediKrajnjiCvor(self):
-    #     """
-    #     Određuje krajnji čvor.
-    #     Krajnji čvor je čvor iz kojeg ne izlazi niti jedna aktivnost.
-    #     """
-    #     for cvor in self.cvorovi:
-    #         if len(cvor.izlazneAktivnosti) == 0:
-    #             self.krajnjiCvor = cvor
-    #             return
 
     def izbaciNepotrebneCvorove(self):
         """
@@ -503,16 +467,16 @@ class Pert:
             self.cvorovi.remove(cvor)
 
     # Ovo bi trebalo biti privatna funkcija, ali nisam je stavio kao privatnu da bi je mogao testirati
-    def svediNaJedanKraj(self, krajnjiCvorovi:list):
+    def svediNaJedanKraj(self, krajnjiCvorovi: list):
         """
         Funkcija svodi više krajnjih čvorova na samo jedan.
 
         :param krajnjiCvorovi: Cvorovi u grafu iz kojih ne izlazi niti jedna aktivnost
         :return: Cvorove koje treba izbaciti, ukoliko je graf skraćen. Inače vraća [].
         """
-        #ako ima samo jedan kraj onda se ne treba ništa skraćivati
-        if len(krajnjiCvorovi)==1:
-            self.krajnjiCvor=krajnjiCvorovi[0]
+        # ako ima samo jedan kraj onda se ne treba ništa skraćivati
+        if len(krajnjiCvorovi) == 1:
+            self.krajnjiCvor = krajnjiCvorovi[0]
             return []
 
         zadnjiCvor = Cvor.noviCvor()
@@ -568,7 +532,7 @@ class Pert:
             # Algoritam mora terminirati u n iteracija inače pravilna numeracija ne postoji,
             # odnosno graf ima petlje
             i = i + 1
-            if i > len(self.cvorovi):
+            if i > self.getBrojCvorova():
                 raise RuntimeError("Graf ne smije imati petlje!")
 
         # sortiranje čvorova po rangu u rastućem poretku
@@ -576,7 +540,7 @@ class Pert:
         self.cvorovi.sort(key=lambda x: x.rang)
 
         # renumeracija čvorova na osnovu ranga: najmanji rang najmanji broj čvora, brojanje počinje od 1
-        for i in range(len(self.cvorovi)):
+        for i in range(self.getBrojCvorova()):
             self.cvorovi[i].brojCvora = i + 1
 
     def izracunajNajranijaVremena(self):
@@ -779,7 +743,6 @@ class Pert:
             niz.append(tuple[1] + tuple[2] * fi)
         return max(niz)
 
-    # todo ovo nisam siguran
     def izracunajVjerovatnocuZavrsetkaProjekta(self, period: decimal) -> decimal:
         """
         Funckija računa vjerovatnoću završetka projekta za određeni period.
@@ -825,7 +788,7 @@ class Pert:
             string += str(clan) + "\n"
         return string
 
-    #todo ova fun i dajStringSvihPuteva se mogu mergat u jednu dajStringPuteva(putevi:list)
+    # todo ova fun i dajStringSvihPuteva se mogu mergat u jednu dajStringPuteva(putevi:list)
     def dajStirngKriticnihPuteva(self) -> str:
         """
         Pretvara kritične puteve u stirng koji se može prikazati.
@@ -858,7 +821,6 @@ class Pert:
         """
         return (isinstance(item, Cvor) and (item in self.cvorovi)) or (
                 isinstance(item, Aktivnost) and (item in self.aktivnosti))
-
 
 
 if __name__ == "__main__":  # pragma: no cover
