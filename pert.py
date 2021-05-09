@@ -21,7 +21,6 @@ getcontext().Emin = -10
 # Dodati i mogućnost unosa vjerovatnoće i ostalih stvari naknadno za računanje trajanja sa vjerovatnoćom i vjerovatnoće završetka
 
 
-# todo pošto listama može biti proslijeđeno bilo šta, i mmože imati duplikata, potrebno je provjeriti prije kreiranja čvorova i aktivnosti
 class Cvor:
     """
     Klasa predstavlja događaje u mrežnom dijagramu koji označavaju početke i krajeve aktivnosti.
@@ -63,6 +62,7 @@ class Cvor:
     def ulazneAktivnosti(self) -> list[Aktivnost]:
         return self._ulazneAktivnosti
 
+    #todo pošto se ovi seteri za ulazne i izlazne aktivnosti nikada ne koriste treba ih obrisati
     @ulazneAktivnosti.setter
     def ulazneAktivnosti(self, value: list[Aktivnost]):
         self._ulazneAktivnosti = value
