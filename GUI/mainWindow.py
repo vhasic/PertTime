@@ -13,9 +13,10 @@ from PyQt5.QtGui import QIcon, QPixmap
 import csv, io
 from pert import Aktivnost
 from pert import Pert
-from charts import createGanttChart,createPertChart
+from charts import createGanttChart, createPertChart
 
-#todo napraviti da se može skrolati ako je prozor mali
+
+# todo napraviti da se može skrolati ako je prozor mali, da je window fiksne veličine i da se slike kako treba prikazuju
 class Ui_mainWindow(object):
 
     def setupUi(self, mainWindow):
@@ -71,6 +72,10 @@ class Ui_mainWindow(object):
         font = QtGui.QFont()
         font.setFamily("Verdana")
         font.setPointSize(12)
+
+        #4 decimale zbog onoga 0.9987
+        self.doubleSpinBox.setDecimals(4)
+
         self.doubleSpinBox.setFont(font)
         self.doubleSpinBox.setMaximum(1.0)
         self.doubleSpinBox.setSingleStep(0.1)
@@ -87,17 +92,17 @@ class Ui_mainWindow(object):
         font.setPointSize(16)
         self.buttonIzracunaj.setFont(font)
         self.buttonIzracunaj.setStyleSheet("justifyContent: \'center\';\n"
-"background-color: rgb(51, 133, 255);\n"
-"height: 40;\n"
-"width: 250;\n"
-"margin: 10;\n"
-"borderRadius: 30;\n"
-"paddingHorizontal: 30;\n"
-"marginTop: 30;\n"
-"alignItems: \'center\';\n"
-"fontSize: 20;\n"
-"color: \"#FFF\";\n"
-"fontWeight: \"bold\"")
+                                           "background-color: rgb(51, 133, 255);\n"
+                                           "height: 40;\n"
+                                           "width: 250;\n"
+                                           "margin: 10;\n"
+                                           "borderRadius: 30;\n"
+                                           "paddingHorizontal: 30;\n"
+                                           "marginTop: 30;\n"
+                                           "alignItems: \'center\';\n"
+                                           "fontSize: 20;\n"
+                                           "color: \"#FFF\";\n"
+                                           "fontWeight: \"bold\"")
         self.buttonIzracunaj.setObjectName("buttonIzracunaj")
         self.gridLayout.addWidget(self.buttonIzracunaj, 5, 0, 1, 2, QtCore.Qt.AlignHCenter)
 
@@ -149,7 +154,6 @@ class Ui_mainWindow(object):
         self.menuAbout.addAction(self.actionAbout)
         self.menubar.addAction(self.menuAbout.menuAction())
 
-
         self.retranslateUi(mainWindow)
         QtCore.QMetaObject.connectSlotsByName(mainWindow)
 
@@ -161,41 +165,45 @@ class Ui_mainWindow(object):
         self.labelRezultat.setText(_translate("mainWindow", "Ovdje ispisati rezultat"))
         self.buttonIzracunaj.setText(_translate("mainWindow", "Izračunaj"))
         self.naslov.setText(_translate("mainWindow", "PERT/TIME algoritam"))
-        self.label.setText(_translate("mainWindow", " Naziv, Preduvjeti, Optimistično vrijeme, Modalno vrijeme, Pesimistično vrijeme"))
+        self.label.setText(
+            _translate("mainWindow", " Naziv, Preduvjeti, Optimistično vrijeme, Modalno vrijeme, Pesimistično vrijeme"))
         self.label_2.setText(_translate("mainWindow", "Vjerovatnoća za procjenu:"))
         self.label_3.setText(_translate("mainWindow", "Rezultat:"))
         self.menuAbout.setTitle(_translate("mainWindow", "File"))
         self.actionAbout.setText(_translate("mainWindow", "About"))
 
-
     def on_click(self):
-        #dobavljanje teksta iz text box-a
+        # dobavljanje teksta iz text box-a
         # očekivani unos je formata: naziv,preduvjet1 preduvjet2 preduvjet3,optimisticno,modalno,pesimisticno
         mytext = self.textBox.toPlainText()
-        #pretvaranje u velika slova
-        mytext=mytext.upper()
-        mytext= "naziv,preduvjeti,optimisticno,modalno,pesimisticno\n"+mytext
+        # pretvaranje u velika slova
+        mytext = mytext.upper()
+        mytext = "naziv,preduvjeti,optimisticno,modalno,pesimisticno\n" + mytext
 
         # pretvara uneseni csv tekst u listu dict objekata
         reader = csv.DictReader(io.StringIO(mytext))
-        userInput= list(reader)
+        userInput = list(reader)
 
         self.createPert(userInput)
         # ovo se moze pretvoriti i u json objekat
         # json_data = json.dumps(list(reader))
         # print(json_data)
 
-    def validate(self,naziv,preduvjeti):
+    def validate(self, naziv, preduvjeti):
         if not isinstance(naziv, str):
             raise ValueError("Naziv treba biti string!")
         if not all(isinstance(s, str) for s in preduvjeti):
             raise ValueError("Preduvjeti trebaju biti stringovi odvjeni znakom razmaka!")
 
-    def createPert(self,userInput:list):
-        g=Pert()
-        correctUserInput=True
+    def createPert(self, userInput: list):
+        g = Pert()
+        correctUserInput = True
         for element in userInput:
             try:
+                #baca se greška, ako je korisnik unio više polja nego što treba odvojenih sa zarezima
+                if len(element) != 5:
+                    raise ValueError("Unos treba biti formata naziv,preduvjeti,optimistično,modalno,pesimistično!")
+
                 naziv = element['naziv']
                 preduvjeti = element['preduvjeti'].split()
                 try:
@@ -204,20 +212,20 @@ class Ui_mainWindow(object):
                     pesimisticno = float(element['pesimisticno'])
                 except ValueError as e:
                     raise ValueError("Optimistično, modalno i pesimistično vrijeme trebaju biti brojevi!")
-                self.validate(naziv,preduvjeti)
+                self.validate(naziv, preduvjeti)
                 # kreiranje i dodavanje aktivnosti
-                a=Aktivnost(naziv,preduvjeti,optimisticno,modalno,pesimisticno)
+                a = Aktivnost(naziv, preduvjeti, optimisticno, modalno, pesimisticno)
                 g.dodajAktivnost(a)
                 # self.labelRezultat.setText("OK")
             except Exception as e:
-                correctUserInput=False
+                correctUserInput = False
                 self.labelRezultat.setStyleSheet("QLabel { color: rgba(255,0,0); }")
                 self.labelRezultat.setText("Error: " + str(e))
 
         if correctUserInput:
             try:
                 g.azurirajGraf()
-                #todo ovdje prikazati i jedan i drugi graf
+                # todo ovdje prikazati i jedan i drugi graf
                 self.createGanttChart(g)
                 pixmap1 = QPixmap('gantt.png')
                 self.labelSlikaGrafa.setPixmap(pixmap1)
@@ -228,49 +236,50 @@ class Ui_mainWindow(object):
                 self.labelSlikaGrafa2.setPixmap(pixmap2)
 
                 vjerovatnoca = self.doubleSpinBox.value()
-                rezultat="Kritični putevi:\n"+g.dajStirngKriticnihPuteva()
-                rezultat+="Najduže procijenjeno trajanje projekta za datu vjerovatnocu je: "+str(g.izracunajNajduzuProcjenuTrajanjaProjekta(vjerovatnoca))+"\n"
+                rezultat = "Kritični putevi:\n" + g.dajStirngKriticnihPuteva()
+                rezultat += "Najduže procijenjeno trajanje projekta za datu vjerovatnocu je: " + str(
+                    g.izracunajNajduzuProcjenuTrajanjaProjekta(vjerovatnoca)) + "\n"
 
                 self.labelRezultat.setText(rezultat)
             except Exception as e:
                 self.labelRezultat.setStyleSheet("QLabel { color: rgba(255,0,0); }")
-                self.labelRezultat.setText("Error: "+str(e))
+                self.labelRezultat.setText("Error: " + str(e))
 
-    def createGanttChart(self, graf:Pert):
-        #ove varijable su tipa dict {naziv_aktivnosti:nesto}
-        startTimes={}
-        completionTimes={}
-        duration={}
-        slackTimes={}
+    def createGanttChart(self, graf: Pert):
+        # ove varijable su tipa dict {naziv_aktivnosti:nesto}
+        startTimes = {}
+        completionTimes = {}
+        duration = {}
+        slackTimes = {}
         for aktivnost in graf.aktivnosti:
-            startTimes[aktivnost.naziv]=float(aktivnost.pocetniCvor.najranijeVrijeme)
-            completionTimes[aktivnost.naziv]=float(aktivnost.krajnjiCvor.najkasnijeVrijeme)
-            duration[aktivnost.naziv]=float(aktivnost.trajannje)
-            slackTimes[aktivnost.naziv]=float(aktivnost.rezervaAktivnosti)
+            startTimes[aktivnost.naziv] = float(aktivnost.pocetniCvor.najranijeVrijeme)
+            completionTimes[aktivnost.naziv] = float(aktivnost.krajnjiCvor.najkasnijeVrijeme)
+            duration[aktivnost.naziv] = float(aktivnost.trajannje)
+            slackTimes[aktivnost.naziv] = float(aktivnost.rezervaAktivnosti)
 
         createGanttChart(startTimes, completionTimes, duration, slackTimes)
 
-    def createPertChart(self,graf:Pert):
+    def createPertChart(self, graf: Pert):
         # ove varijable su tipa dict {broj_cvora:nesto}
         startTimes = {}
         completionTimes = {}
         slackTimes = {}
-        connections={}
+        connections = {}
         for cvor in graf.cvorovi:
             startTimes[cvor.brojCvora] = float(cvor.najranijeVrijeme)
             completionTimes[cvor.brojCvora] = float(cvor.najkasnijeVrijeme)
             slackTimes[cvor.brojCvora] = float(cvor.rezerva)
-            lista=[]
+            lista = []
             for aktivnost in cvor.izlazneAktivnosti:
                 lista.append(aktivnost.krajnjiCvor.brojCvora)
             connections[cvor.brojCvora] = lista
 
-        createPertChart(connections,startTimes,completionTimes,slackTimes)
-
+        createPertChart(connections, startTimes, completionTimes, slackTimes)
 
 
 if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     mainWindow = QtWidgets.QMainWindow()
     ui = Ui_mainWindow()

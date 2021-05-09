@@ -2,7 +2,7 @@ from collections import defaultdict
 import networkx as nx
 import matplotlib.pyplot as plt
 
-#todo ovo preurediti tako da radi za moj graf
+
 def createPertChart(graph, startTimes, completionTimes, slackTimes):
     g = nx.DiGraph()
     labelsDict = {}
