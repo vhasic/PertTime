@@ -9,12 +9,15 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtGui import QIcon, QPixmap
 import csv, io
 from pert import Aktivnost
-from pert import Cvor
 from pert import Pert
+from charts import createGanttChart,createPertChart
 
+#todo napraviti da se može skrolati ako je prozor mali
 class Ui_mainWindow(object):
+
     def setupUi(self, mainWindow):
         mainWindow.setObjectName("mainWindow")
         mainWindow.resize(1103, 828)
@@ -52,6 +55,11 @@ class Ui_mainWindow(object):
         self.labelSlikaGrafa = QtWidgets.QLabel(self.gridLayoutWidget)
         self.labelSlikaGrafa.setObjectName("labelSlikaGrafa")
         self.gridLayout.addWidget(self.labelSlikaGrafa, 10, 0, 1, 1)
+
+        self.labelSlikaGrafa2 = QtWidgets.QLabel(self.gridLayoutWidget)
+        self.labelSlikaGrafa2.setObjectName("labelSlikaGrafa2")
+        self.gridLayout.addWidget(self.labelSlikaGrafa2, 11, 0, 1, 1)
+
         self.labelRezultat = QtWidgets.QLabel(self.gridLayoutWidget)
         font = QtGui.QFont()
         font.setFamily("Verdana")
@@ -141,6 +149,7 @@ class Ui_mainWindow(object):
         self.menuAbout.addAction(self.actionAbout)
         self.menubar.addAction(self.menuAbout.menuAction())
 
+
         self.retranslateUi(mainWindow)
         QtCore.QMetaObject.connectSlotsByName(mainWindow)
 
@@ -148,6 +157,7 @@ class Ui_mainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         mainWindow.setWindowTitle(_translate("mainWindow", "MainWindow"))
         self.labelSlikaGrafa.setText(_translate("mainWindow", "TextLabel"))
+        self.labelSlikaGrafa2.setText(_translate("mainWindow", "TextLabel2"))
         self.labelRezultat.setText(_translate("mainWindow", "Ovdje ispisati rezultat"))
         self.buttonIzracunaj.setText(_translate("mainWindow", "Izračunaj"))
         self.naslov.setText(_translate("mainWindow", "PERT/TIME algoritam"))
@@ -156,6 +166,7 @@ class Ui_mainWindow(object):
         self.label_3.setText(_translate("mainWindow", "Rezultat:"))
         self.menuAbout.setTitle(_translate("mainWindow", "File"))
         self.actionAbout.setText(_translate("mainWindow", "About"))
+
 
     def on_click(self):
         #dobavljanje teksta iz text box-a
@@ -168,13 +179,8 @@ class Ui_mainWindow(object):
         # pretvara uneseni csv tekst u listu dict objekata
         reader = csv.DictReader(io.StringIO(mytext))
         userInput= list(reader)
-        #todo ovako citajuci kreirati niz aktivnosti i izracunati sve pomocu Pert objekta
-        # nakon toga tako izracunate vrijednosti prikazati i kreirati crtez (graf)
-        # print(userInput[0]['naziv'])
 
         self.createPert(userInput)
-
-
         # ovo se moze pretvoriti i u json objekat
         # json_data = json.dumps(list(reader))
         # print(json_data)
@@ -184,16 +190,10 @@ class Ui_mainWindow(object):
             raise ValueError("Naziv treba biti string!")
         if not all(isinstance(s, str) for s in preduvjeti):
             raise ValueError("Preduvjeti trebaju biti stringovi odvjeni znakom razmaka!")
-        # if not isinstance(optimisticno, (int, float)):
-        #     raise ValueError("Optimisticno vrijeme treba biti broj!")
-        # if not isinstance(modalno, (int, float)):
-        #     raise ValueError("Modalno vrijeme treba biti broj!")
-        # if not isinstance(pesimisticno, (int, float)):
-        #     raise ValueError("Pesimisticno vrijeme treba biti broj!")
-
 
     def createPert(self,userInput:list):
         g=Pert()
+        correctUserInput=True
         for element in userInput:
             try:
                 naziv = element['naziv']
@@ -210,21 +210,64 @@ class Ui_mainWindow(object):
                 g.dodajAktivnost(a)
                 # self.labelRezultat.setText("OK")
             except Exception as e:
-                self.labelRezultat.setText(str(e))
+                correctUserInput=False
+                self.labelRezultat.setStyleSheet("QLabel { color: rgba(255,0,0); }")
+                self.labelRezultat.setText("Error: " + str(e))
 
-        try:
-            g.azurirajGraf()
-            self.labelRezultat.setText(str(g))
-        except Exception as e:
-            self.labelRezultat.setText(str(e))
+        if correctUserInput:
+            try:
+                g.azurirajGraf()
+                #todo ovdje prikazati i jedan i drugi graf
+                self.createGanttChart(g)
+                pixmap1 = QPixmap('gantt.png')
+                self.labelSlikaGrafa.setPixmap(pixmap1)
+
+                self.createPertChart(g)
+                pixmap2 = QPixmap('pert.png')
+                # pixmap = pixmap.scaled(400, 400, QtCore.Qt.KeepAspectRatio)
+                self.labelSlikaGrafa2.setPixmap(pixmap2)
+
+                vjerovatnoca = self.doubleSpinBox.value()
+                rezultat="Kritični putevi:\n"+g.dajStirngKriticnihPuteva()
+                rezultat+="Najduže procijenjeno trajanje projekta za datu vjerovatnocu je: "+str(g.izracunajNajduzuProcjenuTrajanjaProjekta(vjerovatnoca))+"\n"
+
+                self.labelRezultat.setText(rezultat)
+            except Exception as e:
+                self.labelRezultat.setStyleSheet("QLabel { color: rgba(255,0,0); }")
+                self.labelRezultat.setText("Error: "+str(e))
+
+    def createGanttChart(self, graf:Pert):
+        #ove varijable su tipa dict {naziv_aktivnosti:nesto}
+        startTimes={}
+        completionTimes={}
+        duration={}
+        slackTimes={}
+        for aktivnost in graf.aktivnosti:
+            startTimes[aktivnost.naziv]=float(aktivnost.pocetniCvor.najranijeVrijeme)
+            completionTimes[aktivnost.naziv]=float(aktivnost.krajnjiCvor.najkasnijeVrijeme)
+            duration[aktivnost.naziv]=float(aktivnost.trajannje)
+            slackTimes[aktivnost.naziv]=float(aktivnost.rezervaAktivnosti)
+
+        createGanttChart(startTimes, completionTimes, duration, slackTimes)
+
+    def createPertChart(self,graf:Pert):
+        # ove varijable su tipa dict {broj_cvora:nesto}
+        startTimes = {}
+        completionTimes = {}
+        slackTimes = {}
+        connections={}
+        for cvor in graf.cvorovi:
+            startTimes[cvor.brojCvora] = float(cvor.najranijeVrijeme)
+            completionTimes[cvor.brojCvora] = float(cvor.najkasnijeVrijeme)
+            slackTimes[cvor.brojCvora] = float(cvor.rezerva)
+            lista=[]
+            for aktivnost in cvor.izlazneAktivnosti:
+                lista.append(aktivnost.krajnjiCvor.brojCvora)
+            connections[cvor.brojCvora] = lista
+
+        createPertChart(connections,startTimes,completionTimes,slackTimes)
 
 
-
-
-
-
-# a,,1,2,3
-# b,a,4,5,6
 
 if __name__ == "__main__":
     import sys
