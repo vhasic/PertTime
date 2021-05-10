@@ -44,7 +44,8 @@ class Ui_mainWindow(object):
         font.setPointSize(12)
         self.doubleSpinBox.setFont(font)
         self.doubleSpinBox.setDecimals(4)
-        self.doubleSpinBox.setMaximum(1.0)
+        # Maksimalna vrijednost nije 1 jer je norm.ppf(1)=Inf
+        self.doubleSpinBox.setMaximum(0.9999)
         self.doubleSpinBox.setSingleStep(0.1)
         self.doubleSpinBox.setObjectName("doubleSpinBox")
         self.gridLayout.addWidget(self.doubleSpinBox, 4, 1, 1, 1)
@@ -198,6 +199,9 @@ class Ui_mainWindow(object):
         self.actionAbout.setText(_translate("mainWindow", "About"))
 
     def on_click(self):
+        """
+        Funkcija se poziva kada se klikne dugme "Izračunaj"
+        """
         # dobavljanje teksta iz text box-a
         # očekivani unos je formata: naziv,preduvjet1 preduvjet2 preduvjet3,optimisticno,modalno,pesimisticno
         mytext = self.textBox.toPlainText()
@@ -210,9 +214,6 @@ class Ui_mainWindow(object):
         userInput = list(reader)
 
         self.createPert(userInput)
-        # ovo se moze pretvoriti i u json objekat
-        # json_data = json.dumps(list(reader))
-        # print(json_data)
 
     def validate(self, naziv, preduvjeti):
         if not isinstance(naziv, str):
@@ -221,6 +222,11 @@ class Ui_mainWindow(object):
             raise ValueError("Preduvjeti trebaju biti stringovi odvjeni znakom razmaka!")
 
     def createPert(self, userInput: list):
+        """
+        Kreira pert klasu, dodaje unesene aktivnosti i prikazuje ih na GUIu.
+
+        :param userInput: Ono što je korisnik unio u text area.
+        """
         g = Pert()
         correctUserInput = True
         for element in userInput:
@@ -243,29 +249,29 @@ class Ui_mainWindow(object):
                 # kreiranje i dodavanje aktivnosti
                 a = Aktivnost(naziv, preduvjeti, optimisticno, modalno, pesimisticno)
                 g.dodajAktivnost(a)
-                # self.labelRezultat.setText("OK")
             except Exception as e:
                 correctUserInput = False
                 self.labelRezultat.setStyleSheet("QLabel { color: rgba(255,0,0); }")
                 self.labelRezultat.setText("Error: " + str(e))
-
+        # Samo ako su uneseno podaci koretni može se dalje raditi (računati)
         if correctUserInput:
+            # ako su nakon pogrešnog unosa, unesene koretne vrijednosti boja ne treba biti crvena
             self.labelRezultat.setStyleSheet("")
             try:
                 g.azurirajGraf()
-                # todo ovdje prikazati i jedan i drugi graf
+
+                #kreiranje i prikaz grafova
                 self.createGanttChart(g)
                 pixmap1 = QPixmap('gantt.png')
                 self.labelSlikaGrafa.setPixmap(pixmap1)
-
                 self.createPertChart(g)
                 pixmap2 = QPixmap('pert.png')
                 # pixmap = pixmap.scaled(400, 400, QtCore.Qt.KeepAspectRatio)
                 self.labelSlikaGrafa2.setPixmap(pixmap2)
 
+                #prikaz ostalih vrijednosti
                 vjerovatnoca = self.doubleSpinBox.value()
                 period = self.zadaniPeriod.value()
-
                 rezultat = self.createResultString(g, vjerovatnoca, period)
 
                 self.labelRezultat.setText(rezultat)
@@ -274,7 +280,14 @@ class Ui_mainWindow(object):
                 self.labelRezultat.setText("Error: " + str(e))
 
     def createResultString(self, g: Pert, vjerovatnoca, period) -> str:
-        rezultat = "Kritični putevi:\n" + g.dajStirngKriticnihPuteva()
+        """
+        Vraća string izračunatih vrijednosti.
+        """
+        rezultat = str(g)+"\n"
+        # rezultat += "Kritični putevi:\n" + g.dajStirngKriticnihPuteva()+"\n"
+        rezultat += "Svi putevi:\n" + g.dajStringSvihPuteva()+"\n"
+        rezultat += "Procijenjeno trajanje projekta za datu vjerovatnocu je: " + str(
+            round(g.izracunajProcjenuTrajanjaProjekta(vjerovatnoca), 4)) + "\n"
         rezultat += "Najduže procijenjeno trajanje projekta za datu vjerovatnocu je: " + str(
             round(g.izracunajNajduzuProcjenuTrajanjaProjekta(vjerovatnoca), 4)) + "\n"
         rezultat += "Vjerovatnoća završetka projekta za zadani period je: " + str(
@@ -283,38 +296,44 @@ class Ui_mainWindow(object):
         return rezultat
 
     def createGanttChart(self, graf: Pert):
+        """
+        Poziva kreiranje gantograma.
+        """
         # ove varijable su tipa dict {naziv_aktivnosti:nesto}
-        startTimes = {}
-        completionTimes = {}
-        duration = {}
-        slackTimes = {}
+        vremenaPocetka = {}
+        vremenaZavrsetka = {}
+        trajanja = {}
+        rezerve = {}
         for aktivnost in graf.aktivnosti:
             # fiktivne aktivnosti nisu bitne i one se ne prikazuju
             if aktivnost.naziv == "fiktivna":
                 continue
-            startTimes[aktivnost.naziv] = round(float(aktivnost.pocetniCvor.najranijeVrijeme), 2)
-            completionTimes[aktivnost.naziv] = round(float(aktivnost.krajnjiCvor.najkasnijeVrijeme), 2)
-            duration[aktivnost.naziv] = round(float(aktivnost.trajannje), 2)
-            slackTimes[aktivnost.naziv] = round(float(aktivnost.rezervaAktivnosti), 2)
+            vremenaPocetka[aktivnost.naziv] = round(float(aktivnost.pocetniCvor.najranijeVrijeme), 2)
+            vremenaZavrsetka[aktivnost.naziv] = round(float(aktivnost.krajnjiCvor.najkasnijeVrijeme), 2)
+            trajanja[aktivnost.naziv] = round(float(aktivnost.trajannje), 2)
+            rezerve[aktivnost.naziv] = round(float(aktivnost.rezervaAktivnosti), 2)
 
-        createGanttChart(startTimes, completionTimes, duration, slackTimes)
+        createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve)
 
     def createPertChart(self, graf: Pert):
+        """
+        Poziva kreiranje pert dijagrama
+        """
         # ove varijable su tipa dict {broj_cvora:nesto}
-        startTimes = {}
-        completionTimes = {}
-        slackTimes = {}
-        connections = {}
+        najranijaVremena = {}
+        najkasnijaVremena = {}
+        rezerveCvorova = {}
+        veze = {}
         for cvor in graf.cvorovi:
-            startTimes[cvor.brojCvora] = round(float(cvor.najranijeVrijeme), 2)
-            completionTimes[cvor.brojCvora] = round(float(cvor.najkasnijeVrijeme), 2)
-            slackTimes[cvor.brojCvora] = round(float(cvor.rezerva), 2)
+            najranijaVremena[cvor.brojCvora] = round(float(cvor.najranijeVrijeme), 2)
+            najkasnijaVremena[cvor.brojCvora] = round(float(cvor.najkasnijeVrijeme), 2)
+            rezerveCvorova[cvor.brojCvora] = round(float(cvor.rezerva), 2)
             lista = []
             for aktivnost in cvor.izlazneAktivnosti:
-                lista.append(aktivnost.krajnjiCvor.brojCvora)
-            connections[cvor.brojCvora] = lista
+                lista.append((aktivnost.krajnjiCvor.brojCvora, aktivnost.naziv))
+            veze[cvor.brojCvora] = lista
 
-        createPertChart(connections, startTimes, completionTimes, slackTimes)
+        createPertChart(veze, najranijaVremena, najkasnijaVremena, rezerveCvorova)
 
 
 if __name__ == "__main__":

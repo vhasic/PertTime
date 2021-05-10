@@ -74,7 +74,7 @@ class TestoviCvora(unittest.TestCase):
 
     def testIspisivanjaCvora(self):
         string = str(self.cvor)
-        self.assertEqual(string, "{Broj čvora: 1, Najranije vrijeme: 0, Najkasnije vrijeme: 0}")
+        self.assertEqual(string, "Broj čvora: 1, Najranije vrijeme: 0, Najkasnije vrijeme: 0")
 
     def testPoredjenjaCvorovaNaJednakost(self):
         c = Cvor(1)
@@ -146,7 +146,7 @@ class TestoviAktivnosti(unittest.TestCase):
 
     def testIspisivanjaAktivnosti(self):
         string = str(self.aktivnost)
-        self.assertEqual(string, "{Naziv aktivnosti: C, Trajanje aktivnosti: 6.0}")
+        self.assertEqual(string, "Naziv aktivnosti: C, Trajanje aktivnosti: 6.0")
 
     def testPoredjenjaAktivnostiNaJednakost(self):
         a = Aktivnost("C", ["B"], 4, 5, 12)

@@ -122,9 +122,9 @@ class Cvor:
     # ispisivanje čvora
     def __str__(self) -> str:
         string = ""
-        string += "{Broj čvora: " + str(self.brojCvora) + ", "
+        string += "Broj čvora: " + str(self.brojCvora) + ", "
         string += "Najranije vrijeme: " + str(self.najranijeVrijeme) + ", "
-        string += "Najkasnije vrijeme: " + str(self.najkasnijeVrijeme) + "}"
+        string += "Najkasnije vrijeme: " + str(self.najkasnijeVrijeme) + ""
         return string
 
     # poređenje čvorova
@@ -241,8 +241,8 @@ class Aktivnost:
     # ispisivanje aktivnosti
     def __str__(self) -> str:
         string = ""
-        string += "{Naziv aktivnosti: " + str(self.naziv) + ", "
-        string += "Trajanje aktivnosti: " + str(self.trajannje) + "}"
+        string += "Naziv aktivnosti: " + str(self.naziv) + ", "
+        string += "Trajanje aktivnosti: " + str(self.trajannje) + ""
         return string
 
     # poređenje aktivnosti

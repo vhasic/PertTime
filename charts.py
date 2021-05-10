@@ -3,21 +3,33 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
-def createPertChart(graph, startTimes, completionTimes, slackTimes):
+def createPertChart(veze, najranijaVremena, najkasnijaVremena, rezerveCvorova):
+    """
+    Kreira pert graf i spašava ga kao sliku 'pert.png'.
+
+    :param veze: Dictionary oblika {pocetniCvor:(krajnjiCvor,nazivAktivnostiKojaIhPovezuje)}
+    :param najranijaVremena: Dictionary oblika {cvor:najranijeVrijeme}
+    :param najkasnijaVremena: Dictionary oblika {cvor:najkasnijeVrijeme}
+    :param rezerveCvorova: Dictionary oblika {cvor:rezerva}
+    """
     g = nx.DiGraph()
     labelsDict = {}
-    for parent in graph:
-        for child in graph[parent]:
-            # parentStr = 'TE={} TL={} R={}'.format(startTimes[parent], completionTimes[parent], slackTimes[parent])
-            # childStr = 'TE={} TL={} R={}'.format(startTimes[child], completionTimes[child], slackTimes[child])
-            parentStr = '{}/{}/{}'.format(startTimes[parent], completionTimes[parent], slackTimes[parent])
-            childStr = '{}/{}/{}'.format(startTimes[child], completionTimes[child], slackTimes[child])
-            labelsDict[parent] = parentStr
-            labelsDict[child] = childStr
-            g.add_edge(parent, child, color='black')
+    edgeLabels = {}
+    for pocetniCvor in veze:
+        for par in veze[pocetniCvor]:
+            krajnjiCvor = par[0]
+            parentStr = '{}|{}|{}'.format(najranijaVremena[pocetniCvor], najkasnijaVremena[pocetniCvor], rezerveCvorova[pocetniCvor])
+            childStr = '{}|{}|{}'.format(najranijaVremena[krajnjiCvor], najkasnijaVremena[krajnjiCvor], rezerveCvorova[krajnjiCvor])
+            labelsDict[pocetniCvor] = parentStr
+            labelsDict[krajnjiCvor] = childStr
+            g.add_edge(pocetniCvor, krajnjiCvor, color='black')
+            if par[1]!="fiktivna":
+                edgeLabels[pocetniCvor, krajnjiCvor] = par[1]
+            else:
+                edgeLabels[pocetniCvor, krajnjiCvor] = '0'
     # pos = nx.shell_layout(g)
     pos = nx.planar_layout(g)
-    for task in startTimes:
+    for task in najranijaVremena:
         x, y = pos[task]
         plt.text(x, y + 0.1, s=labelsDict[task], bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
     print(nx.info(g))
@@ -26,27 +38,42 @@ def createPertChart(graph, startTimes, completionTimes, slackTimes):
     colors = [g[u][v]['color'] for u, v in edges]
 
     nx.draw(g, pos, with_labels=True, edge_color=colors)
+    nx.draw_networkx_edge_labels(g, pos, edge_labels=edgeLabels, font_size=8)
     plt.savefig('pert.png', bbox_inches='tight')
     plt.show()
 
 
-def createGanttChart(startTimes, completionTimes, durations, slackTimes):
+def createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve):
+    """
+    Kreira gantogram i spašava ga kao sliku 'gantt.png'.
+
+    :param vremenaPocetka: Dictionary oblika {nazivAktivnosti:vrijemePocetka}
+    :param vremenaZavrsetka: Dictionary oblika {nazivAktivnosti:vrijemeZavrsetka}
+    :param trajanja: Dictionary oblika {nazivAktivnosti:trajanje}
+    :param rezerve: Dictionary oblika {nazivAktivnosti:rezerva}
+    """
     fig, ax = plt.subplots()
-    y_values = sorted(startTimes.keys(), key=lambda x: startTimes[x])
+    # nazivi aktivnosti sortirani prema vremenu početka, od najranijeg do najkasnijeg početka
+    y_values = sorted(vremenaPocetka.keys(), key=lambda x: vremenaPocetka[x])
     y_start = 5
     y_height = 5
-    for value in y_values:
-        ax.broken_barh([(startTimes[value], durations[value])], (y_start, y_height), facecolors='blue')
-        ax.broken_barh([(completionTimes[value], slackTimes[value])], (y_start, y_height), facecolors='red')
-        ax.text(completionTimes[value] + slackTimes[value] + 0.5, y_start + y_height / 2, value)
+    for nazivAktivnosti in y_values:
+        # plavom je prikazano trajanje aktivnosti (u tom periodu se aktivnost izvršava)
+        ax.broken_barh([(vremenaPocetka[nazivAktivnosti], trajanja[nazivAktivnosti])], (y_start, y_height), facecolors='blue')
+        # crvenom je prikazana rezerva aktivnosti
+        ax.broken_barh([(vremenaZavrsetka[nazivAktivnosti] - rezerve[nazivAktivnosti], rezerve[nazivAktivnosti])], (y_start, y_height), facecolors='red')
+        # ax.broken_barh([(vremenaZavrsetka[nazivAktivnosti], rezerve[nazivAktivnosti])], (y_start, y_height), facecolors='red')
+        # Naziv aktivnosti se prikazuje na udaljenosti 0.5 od kraja linije
+        ax.text(vremenaZavrsetka[nazivAktivnosti] + 0.5, y_start + y_height / 2, nazivAktivnosti)
+        # ax.text(vremenaZavrsetka[nazivAktivnosti] + rezerve[nazivAktivnosti] + 0.5, y_start + y_height / 2, nazivAktivnosti)
         y_start += 10
-    ax.set_xlim(0, max(completionTimes.values()) + 5)
-    ax.set_ylim(len(durations) * 10)
-    ax.set_xlabel('Time')
-    ax.set_ylabel('Tasks')
+    ax.set_xlim(0, max(vremenaZavrsetka.values()) + 5)
+    ax.set_ylim(len(trajanja) * 10)
+    ax.set_xlabel('Vrijeme')
+    ax.set_ylabel('Aktivnosti')
     i = 0
     y_ticks = []
-    while i < len(durations) * 10:
+    while i < len(trajanja) * 10:
         y_ticks.append(i)
         i += 10
     ax.set_yticks(y_ticks)
