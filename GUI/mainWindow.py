@@ -10,6 +10,7 @@
 
 import csv
 import io
+import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QPixmap
@@ -45,7 +46,8 @@ class Ui_mainWindow(object):
         self.doubleSpinBox.setFont(font)
         self.doubleSpinBox.setDecimals(4)
         # Maksimalna vrijednost nije 1 jer je norm.ppf(1)=Inf
-        self.doubleSpinBox.setMaximum(0.9999)
+        # self.doubleSpinBox.setMaximum(0.9999)
+        self.doubleSpinBox.setMaximum(1.0)
         self.doubleSpinBox.setSingleStep(0.1)
         self.doubleSpinBox.setObjectName("doubleSpinBox")
         self.gridLayout.addWidget(self.doubleSpinBox, 4, 1, 1, 1)
@@ -261,13 +263,14 @@ class Ui_mainWindow(object):
                 g.azurirajGraf()
 
                 #kreiranje i prikaz grafova
-                self.createGanttChart(g)
-                pixmap1 = QPixmap('gantt.png')
-                self.labelSlikaGrafa.setPixmap(pixmap1)
                 self.createPertChart(g)
                 pixmap2 = QPixmap('pert.png')
                 # pixmap = pixmap.scaled(400, 400, QtCore.Qt.KeepAspectRatio)
                 self.labelSlikaGrafa2.setPixmap(pixmap2)
+
+                self.createGanttChart(g)
+                pixmap1 = QPixmap('gantt.png')
+                self.labelSlikaGrafa.setPixmap(pixmap1)
 
                 #prikaz ostalih vrijednosti
                 vjerovatnoca = self.doubleSpinBox.value()

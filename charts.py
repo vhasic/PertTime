@@ -1,4 +1,3 @@
-from collections import defaultdict
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -40,7 +39,7 @@ def createPertChart(veze, najranijaVremena, najkasnijaVremena, rezerveCvorova):
     nx.draw(g, pos, with_labels=True, edge_color=colors)
     nx.draw_networkx_edge_labels(g, pos, edge_labels=edgeLabels, font_size=8)
     plt.savefig('pert.png', bbox_inches='tight')
-    plt.show()
+    # plt.show()
 
 
 def createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve):
@@ -83,4 +82,7 @@ def createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve):
         left='off',  # ticks along the top edge are off
         labelleft='off')  # labels along the bottom edge are off
     plt.savefig('gantt.png', bbox_inches='tight')
-    plt.show()
+    # plt.show()
+
+# kreiranje exe fajla
+# pyinstaller --onefile --hidden-import charts -w -i=appIcon.ico -n PertTime GUI\mainWindow.py

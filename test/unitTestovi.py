@@ -91,7 +91,7 @@ class TestoviAktivnosti(unittest.TestCase):
         self.aktivnost = Aktivnost("C", ["B"], 4, 5, 12)
 
     def testVarijanseAktivnosti(self):
-        a = Aktivnost("A", [], 6, 5, 12)
+        a = Aktivnost("A", [], 2, 6, 8)
         self.assertEqual(a.varijansa, 1)
 
     def testPostavljanjaNazivaAktivnosti(self):
@@ -141,8 +141,16 @@ class TestoviAktivnosti(unittest.TestCase):
     def testIzracunavanjaOcekivanogTrajanjaAktivnosti(self):
         self.assertEqual(self.aktivnost.izracunajOcekivanoVrijeme(4, 5, 12), 6)
 
+    def testIzracunavanjaOcekivanogTrajanjaAktivnostiIzuzetak(self):
+        with self.assertRaisesRegex(ValueError, "Mora vrijediti optimistično <= modlano <= pesimistično vrijeme!"):
+            vrijednost = self.aktivnost.izracunajOcekivanoVrijeme(6, 5, 12)
+
     def testIzracunavanjaVarijanseAktivnosti(self):
         self.assertEqual(self.aktivnost.izracunajVarijansu(6, 12), 1)
+
+    def testIzracunavanjaVarijanseAktivnostiIzuzetak(self):
+        with self.assertRaisesRegex(ValueError, "Mora vrijediti optimistično <= pesimistično vrijeme!"):
+            vrijednost = self.aktivnost.izracunajVarijansu(12, 6)
 
     def testIspisivanjaAktivnosti(self):
         string = str(self.aktivnost)
@@ -157,7 +165,6 @@ class TestoviAktivnosti(unittest.TestCase):
         self.assertTrue(a != self.aktivnost)
 
 
-# todo Nedovršeno
 class TestoviPertKlase(unittest.TestCase):
     # ova se metoda izvršava prije svakog testa
     def setUp(self):

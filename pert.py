@@ -14,11 +14,6 @@ getcontext().Emin = -10
 
 # todo Dodati graf white box testiranja u dokumentu. Dodati po primjer korištenja u stub dijelu.
 # Najvažnije dijelove koda prikazati kao jupiter notebook u dokumentu i opisati ih
-# Napraviti prostu formu sa text area u kojem se unose aktivnosti u CSV obliku naziv;preduvjet1,2,3;a;m;b
-# ta forma će imati dugme "izračunaj" koje kada se pritisne ovaj tekst se pokupi sa forme parsira sa npr pandas from csv, pozove se algoritam
-# i na ekranu se ispišu fino događaji npr: Broj čvora, Najranije, Najkasnije vrijeme, Reszerva u svakom redu.
-# Ovo isto za aktivnosti. I na kraju prikazati trajanje puta i kritični put. (sve je ovo print perta samo ga lijepo formatirati)
-# Dodati i mogućnost unosa vjerovatnoće i ostalih stvari naknadno za računanje trajanja sa vjerovatnoćom i vjerovatnoće završetka
 
 
 class Cvor:
@@ -62,7 +57,6 @@ class Cvor:
     def ulazneAktivnosti(self) -> list[Aktivnost]:
         return self._ulazneAktivnosti
 
-    #todo pošto se ovi seteri za ulazne i izlazne aktivnosti nikada ne koriste treba ih obrisati
     @ulazneAktivnosti.setter
     def ulazneAktivnosti(self, value: list[Aktivnost]):
         self._ulazneAktivnosti = value
@@ -123,8 +117,8 @@ class Cvor:
     def __str__(self) -> str:
         string = ""
         string += "Broj čvora: " + str(self.brojCvora) + ", "
-        string += "Najranije vrijeme: " + str(self.najranijeVrijeme) + ", "
-        string += "Najkasnije vrijeme: " + str(self.najkasnijeVrijeme) + ""
+        string += "Najranije vrijeme: " + str(round(self.najranijeVrijeme, 2)) + ", "
+        string += "Najkasnije vrijeme: " + str(round(self.najkasnijeVrijeme, 2)) + ""
         return string
 
     # poređenje čvorova
@@ -222,11 +216,14 @@ class Aktivnost:
     def izracunajOcekivanoVrijeme(self, a: decimal, m: decimal, b: decimal) -> decimal:
         """
         Računa očekivano vrijeme za datu aktivnost kao: očekivanoVrijeme=(a+4m+b)/6
+        Baca ValueError ako nije a<=m<=b
 
         :param a: optimistično vrijeme
         :param m: modalno vrijeme
         :param b: pesimistično vrijeme
         """
+        if not (a <= m <= b):
+            raise ValueError("Mora vrijediti optimistično <= modlano <= pesimistično vrijeme!")
         return (a + 4 * m + b) / 6
 
     def izracunajVarijansu(self, a: decimal, b: decimal) -> decimal:
@@ -236,13 +233,15 @@ class Aktivnost:
         :param a: optimistično vrijeme
         :param b: pesimistično vrijeme
         """
+        if not (a <= b):
+            raise ValueError("Mora vrijediti optimistično <= pesimistično vrijeme!")
         return ((b - a) / 6) ** 2
 
     # ispisivanje aktivnosti
     def __str__(self) -> str:
         string = ""
         string += "Naziv aktivnosti: " + str(self.naziv) + ", "
-        string += "Trajanje aktivnosti: " + str(self.trajannje) + ""
+        string += "Trajanje aktivnosti: " + str(round(self.trajannje, 2)) + ""
         return string
 
     # poređenje aktivnosti
@@ -757,7 +756,7 @@ class Pert:
         string = ""
         string += "Čvorovi projekta: \n" + str(self.dajStringKolekcije(self.cvorovi)) + "\n"
         string += "Aktivnosti projekta: \n" + str(self.dajStringKolekcije(self.aktivnosti)) + "\n"
-        string += "Trajanje projekta: " + str(self.trajanjeProjekta) + "\n"
+        string += "Trajanje projekta: " + str(round(self.trajanjeProjekta, 2)) + "\n"
         string += "Kritični putevi: \n" + self.dajStirngKriticnihPuteva()
         return string
 
@@ -773,7 +772,8 @@ class Pert:
             for cvor in tuple[0]:
                 string += str(cvor.brojCvora) + " - "
             string = string[:-3]
-            rezultat += string + " Trajanje: " + str(tuple[1]) + " Devijacija: " + str(round(tuple[2], 2)) + "\n"
+            rezultat += string + " Trajanje: " + str(round(tuple[1], 2)) + " Devijacija: " + str(
+                round(tuple[2], 2)) + "\n"
         return rezultat
 
     def dajStringKolekcije(self, kolekcija: list) -> str:
@@ -788,7 +788,6 @@ class Pert:
             string += str(clan) + "\n"
         return string
 
-    # todo ova fun i dajStringSvihPuteva se mogu mergat u jednu dajStringPuteva(putevi:list)
     def dajStirngKriticnihPuteva(self) -> str:
         """
         Pretvara kritične puteve u stirng koji se može prikazati.
