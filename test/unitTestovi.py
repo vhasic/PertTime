@@ -389,8 +389,7 @@ class TestoviPertKlase(unittest.TestCase):
         self.graf.izracunajNajkasnijaVremena()
         self.graf.izracunajRezerveAktivnosti()
 
-        # todo provjeriti ovo što je rezerva negativna
-        rezerve = [0, 0, 4, 0, 3, 0, 0, 2, 0, 1, 0, 1, -36]
+        rezerve = [0, 0, 4, 0, 3, 0, 0, 2, 0, 1, 0, 0, 1]
         for i in range(self.graf.getBrojAktivnosti()):
             self.assertEqual(self.graf.aktivnosti[i].rezervaAktivnosti, rezerve[i])
 

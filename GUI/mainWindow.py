@@ -314,7 +314,8 @@ class Ui_mainWindow(object):
             vremenaPocetka[aktivnost.naziv] = round(float(aktivnost.pocetniCvor.najranijeVrijeme), 2)
             vremenaZavrsetka[aktivnost.naziv] = round(float(aktivnost.krajnjiCvor.najkasnijeVrijeme), 2)
             trajanja[aktivnost.naziv] = round(float(aktivnost.trajannje), 2)
-            rezerve[aktivnost.naziv] = round(float(aktivnost.rezervaAktivnosti), 2)
+            # rezerva se prikazuje samo ako je pozitivna
+            rezerve[aktivnost.naziv] = round(float(aktivnost.rezervaAktivnosti), 2) if aktivnost.rezervaAktivnosti > 0 else 0
 
         createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve)
 

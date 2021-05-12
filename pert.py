@@ -7,13 +7,8 @@ import math
 from decimal import *
 
 # postavljanje preciznosti decimalnih brojeva na 2 decimale i minimalnog exponenta na -10
-# todo možda postaviti prec na 5 npr, a Emin na 0
 getcontext().prec = 2
 getcontext().Emin = -10
-
-
-# todo Dodati graf white box testiranja u dokumentu. Dodati po primjer korištenja u stub dijelu.
-# Najvažnije dijelove koda prikazati kao jupiter notebook u dokumentu i opisati ih
 
 
 class Cvor:
@@ -148,6 +143,7 @@ class Aktivnost:
         :param modalnoVrijeme: srednje trajanje
         :param pesimisticnoVrijeme: najkraće trajanje
         """
+        self._id = id(self)
         self._naziv = naziv
         self._trajanje = self.izracunajOcekivanoVrijeme(optimisticnoVrijeme, modalnoVrijeme, pesimisticnoVrijeme)
         self._preduvjeti = preduvjeti
@@ -299,6 +295,10 @@ class Pert:
     @property
     def aktivnosti(self):
         return self._aktivnosti
+
+    @aktivnosti.setter
+    def aktivnosti(self, value):
+        self._aktivnosti = value
 
     @property
     def pocetniCvor(self) -> Cvor:
@@ -458,12 +458,16 @@ class Pert:
         cvoroviZaBrisanje.extend(self.svediNaJedanKraj(krajnjiCvorovi))
 
         # obrisati viška aktivnosti
-        for cvor in aktivnostiZaBrisanje:
-            self.aktivnosti.remove(cvor)
+        for aktivnost in aktivnostiZaBrisanje:
+            # self.aktivnosti.remove(aktivnost)
+            self.__obrisiAktivnost(aktivnost)
 
         # obrisati viška čvorove
         for cvor in cvoroviZaBrisanje:
             self.cvorovi.remove(cvor)
+
+    def __obrisiAktivnost(self, aktivnost):
+        self.aktivnosti = list(filter(lambda x: x._id != aktivnost._id, self.aktivnosti))
 
     # Ovo bi trebalo biti privatna funkcija, ali nisam je stavio kao privatnu da bi je mogao testirati
     def svediNaJedanKraj(self, krajnjiCvorovi: list):

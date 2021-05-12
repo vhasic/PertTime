@@ -11,6 +11,7 @@ def createPertChart(veze, najranijaVremena, najkasnijaVremena, rezerveCvorova):
     :param najkasnijaVremena: Dictionary oblika {cvor:najkasnijeVrijeme}
     :param rezerveCvorova: Dictionary oblika {cvor:rezerva}
     """
+    plt.clf() # brisanje prethodnog grafa
     g = nx.DiGraph()
     labelsDict = {}
     edgeLabels = {}
@@ -51,6 +52,7 @@ def createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve):
     :param trajanja: Dictionary oblika {nazivAktivnosti:trajanje}
     :param rezerve: Dictionary oblika {nazivAktivnosti:rezerva}
     """
+    plt.clf()
     fig, ax = plt.subplots()
     # nazivi aktivnosti sortirani prema vremenu početka, od najranijeg do najkasnijeg početka
     y_values = sorted(vremenaPocetka.keys(), key=lambda x: vremenaPocetka[x])
@@ -60,7 +62,7 @@ def createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve):
         # plavom je prikazano trajanje aktivnosti (u tom periodu se aktivnost izvršava)
         ax.broken_barh([(vremenaPocetka[nazivAktivnosti], trajanja[nazivAktivnosti])], (y_start, y_height), facecolors='blue')
         # crvenom je prikazana rezerva aktivnosti
-        ax.broken_barh([(vremenaZavrsetka[nazivAktivnosti] - rezerve[nazivAktivnosti], rezerve[nazivAktivnosti])], (y_start, y_height), facecolors='red')
+        ax.broken_barh([(vremenaPocetka[nazivAktivnosti] + trajanja[nazivAktivnosti], rezerve[nazivAktivnosti])], (y_start, y_height), facecolors='red')
         # ax.broken_barh([(vremenaZavrsetka[nazivAktivnosti], rezerve[nazivAktivnosti])], (y_start, y_height), facecolors='red')
         # Naziv aktivnosti se prikazuje na udaljenosti 0.5 od kraja linije
         ax.text(vremenaZavrsetka[nazivAktivnosti] + 0.5, y_start + y_height / 2, nazivAktivnosti)
