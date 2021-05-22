@@ -10,7 +10,6 @@
 
 import csv
 import io
-import os
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QPixmap
@@ -204,18 +203,25 @@ class Ui_mainWindow(object):
         """
         Funkcija se poziva kada se klikne dugme "Izračunaj"
         """
-        # dobavljanje teksta iz text box-a
-        # očekivani unos je formata: naziv,preduvjet1 preduvjet2 preduvjet3,optimisticno,modalno,pesimisticno
-        mytext = self.textBox.toPlainText()
-        # pretvaranje u velika slova
-        mytext = mytext.upper()
-        mytext = "naziv,preduvjeti,optimisticno,modalno,pesimisticno\n" + mytext
+        # poništavanje crvene boje, ako je bila greška prošlog puta kada je dugme kliknuto
+        self.labelRezultat.setStyleSheet("QLabel {}")
+        try:
+            # dobavljanje teksta iz text box-a
+            # očekivani unos je formata: naziv,preduvjet1 preduvjet2 preduvjet3,optimisticno,modalno,pesimisticno
+            mytext = self.textBox.toPlainText()
+            # pretvaranje u velika slova
+            mytext = mytext.upper()
+            if len(mytext) == 0:
+                raise ValueError("Aktivnosti su obavezan parametar!")
+            mytext = "naziv,preduvjeti,optimisticno,modalno,pesimisticno\n" + mytext
 
-        # pretvara uneseni csv tekst u listu dict objekata
-        reader = csv.DictReader(io.StringIO(mytext))
-        userInput = list(reader)
-
-        self.createPert(userInput)
+            # pretvara uneseni csv tekst u listu dict objekata
+            reader = csv.DictReader(io.StringIO(mytext))
+            userInput = list(reader)
+            self.createPert(userInput)
+        except Exception as e:
+            self.labelRezultat.setStyleSheet("QLabel { color: rgba(255,0,0); }")
+            self.labelRezultat.setText("Error: " + str(e))
 
     def validate(self, naziv, preduvjeti):
         if not isinstance(naziv, str):
@@ -262,17 +268,16 @@ class Ui_mainWindow(object):
             try:
                 g.azurirajGraf()
 
-                #kreiranje i prikaz grafova
+                # kreiranje i prikaz grafova
                 self.createPertChart(g)
                 pixmap2 = QPixmap('pert.png')
-                # pixmap = pixmap.scaled(400, 400, QtCore.Qt.KeepAspectRatio)
                 self.labelSlikaGrafa2.setPixmap(pixmap2)
 
                 self.createGanttChart(g)
                 pixmap1 = QPixmap('gantt.png')
                 self.labelSlikaGrafa.setPixmap(pixmap1)
 
-                #prikaz ostalih vrijednosti
+                # prikaz ostalih vrijednosti
                 vjerovatnoca = self.doubleSpinBox.value()
                 period = self.zadaniPeriod.value()
                 rezultat = self.createResultString(g, vjerovatnoca, period)
@@ -286,12 +291,11 @@ class Ui_mainWindow(object):
         """
         Vraća string izračunatih vrijednosti.
         """
-        rezultat = str(g)+"\n"
-        # rezultat += "Kritični putevi:\n" + g.dajStirngKriticnihPuteva()+"\n"
-        rezultat += "Svi putevi:\n" + g.dajStringSvihPuteva()+"\n"
-        rezultat += "Procijenjeno trajanje projekta za datu vjerovatnocu je: " + str(
+        rezultat = str(g) + "\n"
+        rezultat += "Svi putevi:\n" + g.dajStringSvihPuteva() + "\n"
+        rezultat += "Procijenjeno trajanje projekta za datu vjerovatnoću je: " + str(
             round(g.izracunajProcjenuTrajanjaProjekta(vjerovatnoca), 4)) + "\n"
-        rezultat += "Najduže procijenjeno trajanje projekta za datu vjerovatnocu je: " + str(
+        rezultat += "Najduže procijenjeno trajanje projekta za datu vjerovatnoću je: " + str(
             round(g.izracunajNajduzuProcjenuTrajanjaProjekta(vjerovatnoca), 4)) + "\n"
         rezultat += "Vjerovatnoća završetka projekta za zadani period je: " + str(
             round(g.izracunajVjerovatnocuZavrsetkaProjekta(period), 4)) + "\n"
@@ -315,7 +319,8 @@ class Ui_mainWindow(object):
             vremenaZavrsetka[aktivnost.naziv] = round(float(aktivnost.krajnjiCvor.najkasnijeVrijeme), 2)
             trajanja[aktivnost.naziv] = round(float(aktivnost.trajannje), 2)
             # rezerva se prikazuje samo ako je pozitivna
-            rezerve[aktivnost.naziv] = round(float(aktivnost.rezervaAktivnosti), 2) if aktivnost.rezervaAktivnosti > 0 else 0
+            rezerve[aktivnost.naziv] = round(float(aktivnost.rezervaAktivnosti),
+                                             2) if aktivnost.rezervaAktivnosti > 0 else 0
 
         createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve)
 

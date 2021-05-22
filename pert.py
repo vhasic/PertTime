@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import decimal
-
-from scipy.stats import norm
 import math
 from decimal import *
+
+from scipy.stats import norm
 
 # postavljanje preciznosti decimalnih brojeva na 2 decimale i minimalnog exponenta na -10
 getcontext().prec = 2
@@ -459,7 +459,6 @@ class Pert:
 
         # obrisati viška aktivnosti
         for aktivnost in aktivnostiZaBrisanje:
-            # self.aktivnosti.remove(aktivnost)
             self.__obrisiAktivnost(aktivnost)
 
         # obrisati viška čvorove
@@ -469,7 +468,6 @@ class Pert:
     def __obrisiAktivnost(self, aktivnost):
         self.aktivnosti = list(filter(lambda x: x._id != aktivnost._id, self.aktivnosti))
 
-    # Ovo bi trebalo biti privatna funkcija, ali nisam je stavio kao privatnu da bi je mogao testirati
     def svediNaJedanKraj(self, krajnjiCvorovi: list):
         """
         Funkcija svodi više krajnjih čvorova na samo jedan.
@@ -828,48 +826,3 @@ class Pert:
 
 if __name__ == "__main__":  # pragma: no cover
     print("ok")
-    # graf = Pert()
-    # graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
-    # graf.dodajAktivnost(Aktivnost("B", ["A"], 4, 4, 4))
-    # graf.dodajAktivnost(Aktivnost("C", ["B"], 4, 5, 12))
-    # graf.dodajAktivnost(Aktivnost("D", ["B"], 9, 10, 11))
-    # graf.dodajAktivnost(Aktivnost("E", ["B"], 19, 19, 19))
-    # graf.dodajAktivnost(Aktivnost("F", ["C", "D"], 12, 12, 12))
-    # graf.dodajAktivnost(Aktivnost("G", ["E", "F"], 6, 7, 14))
-    # graf.dodajAktivnost(Aktivnost("H", ["E", "F"], 2, 4, 24))
-    # graf.dodajAktivnost(Aktivnost("I", ["G"], 2, 4, 6))
-    # graf.dodajAktivnost(Aktivnost("J", ["G", "H"], 3, 3, 3))
-    # graf.azurirajGraf()
-    # print(graf)
-    # print("TEST svih puteva\n")
-    # print(graf.dajStringSvihPuteva())
-    # print(graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.25))
-    # print(graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.75))
-    # print(graf.izracunajNajduzuProcjenuTrajanjaProjekta(0.9987))
-
-    # test izbacivanje viška čvorova
-    # graf = Pert()
-    # graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
-    # graf.dodajAktivnost(Aktivnost("B", [], 4, 4, 4))
-    # graf.dodajAktivnost(Aktivnost("C", [], 4, 5, 12))
-    # graf.dodajAktivnost(Aktivnost("D", ["A","B","C"], 9, 10, 11))
-    # graf.dodajAktivnost(Aktivnost("E", ["A", "B", "C"], 19, 19, 19))
-    # graf.azurirajGraf()
-    ## broj cvorova treba biti 6, a ne 7
-    # print(graf)
-
-    # # test izbacivanje viška čvorova 2
-    # graf = Pert()
-    # graf.dodajAktivnost(Aktivnost("A", [], 1, 2, 3))
-    # graf.dodajAktivnost(Aktivnost("B", [], 4, 4, 4))
-    # graf.dodajAktivnost(Aktivnost("C", ["A", "B"], 4, 5, 12))
-    # graf.dodajAktivnost(Aktivnost("D", ["A", "B"], 9, 10, 11))
-    # graf.azurirajGraf()
-    # # broj cvorova treba biti 5
-    # print(graf)
-
-    # print(graf.izracunajProcjenuTrajanjaProjekta(0.25))
-    # print(graf.izracunajProcjenuTrajanjaProjekta(0.9987))
-    # if Decimal(0) - Decimal(0.000000000000002) == 0:
-    #     print("ok")
-    # print(norm.cdf(norm.ppf(0.25)))

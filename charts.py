@@ -1,5 +1,5 @@
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
 
 
 def createPertChart(veze, najranijaVremena, najkasnijaVremena, rezerveCvorova):
@@ -11,23 +11,24 @@ def createPertChart(veze, najranijaVremena, najkasnijaVremena, rezerveCvorova):
     :param najkasnijaVremena: Dictionary oblika {cvor:najkasnijeVrijeme}
     :param rezerveCvorova: Dictionary oblika {cvor:rezerva}
     """
-    plt.clf() # brisanje prethodnog grafa
+    plt.clf()  # brisanje prethodnog grafa
     g = nx.DiGraph()
     labelsDict = {}
     edgeLabels = {}
     for pocetniCvor in veze:
         for par in veze[pocetniCvor]:
             krajnjiCvor = par[0]
-            parentStr = '{}|{}|{}'.format(najranijaVremena[pocetniCvor], najkasnijaVremena[pocetniCvor], rezerveCvorova[pocetniCvor])
-            childStr = '{}|{}|{}'.format(najranijaVremena[krajnjiCvor], najkasnijaVremena[krajnjiCvor], rezerveCvorova[krajnjiCvor])
+            parentStr = '{}|{}|{}'.format(najranijaVremena[pocetniCvor], najkasnijaVremena[pocetniCvor],
+                                          rezerveCvorova[pocetniCvor])
+            childStr = '{}|{}|{}'.format(najranijaVremena[krajnjiCvor], najkasnijaVremena[krajnjiCvor],
+                                         rezerveCvorova[krajnjiCvor])
             labelsDict[pocetniCvor] = parentStr
             labelsDict[krajnjiCvor] = childStr
             g.add_edge(pocetniCvor, krajnjiCvor, color='black')
-            if par[1]!="fiktivna":
+            if par[1] != "fiktivna":
                 edgeLabels[pocetniCvor, krajnjiCvor] = par[1]
             else:
                 edgeLabels[pocetniCvor, krajnjiCvor] = '0'
-    # pos = nx.shell_layout(g)
     pos = nx.planar_layout(g)
     for task in najranijaVremena:
         x, y = pos[task]
@@ -60,13 +61,13 @@ def createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve):
     y_height = 5
     for nazivAktivnosti in y_values:
         # plavom je prikazano trajanje aktivnosti (u tom periodu se aktivnost izvršava)
-        ax.broken_barh([(vremenaPocetka[nazivAktivnosti], trajanja[nazivAktivnosti])], (y_start, y_height), facecolors='blue')
+        ax.broken_barh([(vremenaPocetka[nazivAktivnosti], trajanja[nazivAktivnosti])], (y_start, y_height),
+                       facecolors='blue')
         # crvenom je prikazana rezerva aktivnosti
-        ax.broken_barh([(vremenaPocetka[nazivAktivnosti] + trajanja[nazivAktivnosti], rezerve[nazivAktivnosti])], (y_start, y_height), facecolors='red')
-        # ax.broken_barh([(vremenaZavrsetka[nazivAktivnosti], rezerve[nazivAktivnosti])], (y_start, y_height), facecolors='red')
+        ax.broken_barh([(vremenaPocetka[nazivAktivnosti] + trajanja[nazivAktivnosti], rezerve[nazivAktivnosti])],
+                       (y_start, y_height), facecolors='red')
         # Naziv aktivnosti se prikazuje na udaljenosti 0.5 od kraja linije
         ax.text(vremenaZavrsetka[nazivAktivnosti] + 0.5, y_start + y_height / 2, nazivAktivnosti)
-        # ax.text(vremenaZavrsetka[nazivAktivnosti] + rezerve[nazivAktivnosti] + 0.5, y_start + y_height / 2, nazivAktivnosti)
         y_start += 10
     ax.set_xlim(0, max(vremenaZavrsetka.values()) + 5)
     ax.set_ylim(len(trajanja) * 10)
@@ -84,7 +85,3 @@ def createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve):
         left='off',  # ticks along the top edge are off
         labelleft='off')  # labels along the bottom edge are off
     plt.savefig('gantt.png', bbox_inches='tight')
-    # plt.show()
-
-# kreiranje exe fajla
-# pyinstaller --onefile --hidden-import charts -w -i=appIcon.ico -n PertTime GUI\mainWindow.py
