@@ -33,7 +33,7 @@ def createPertChart(veze, najranijaVremena, najkasnijaVremena, rezerveCvorova):
     for task in najranijaVremena:
         x, y = pos[task]
         plt.text(x, y + 0.1, s=labelsDict[task], bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
-    print(nx.info(g))
+    # print(nx.info(g))
 
     edges = g.edges()
     colors = [g[u][v]['color'] for u, v in edges]

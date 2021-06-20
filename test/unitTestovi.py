@@ -90,6 +90,14 @@ class TestoviAktivnosti(unittest.TestCase):
     def setUp(self):
         self.aktivnost = Aktivnost("C", ["B"], 4, 5, 12)
 
+    def testkreiranjaSaNegativnimVremenima(self):
+        with self.assertRaisesRegex(ValueError, "Vremena moraju biti pozitivni brojevi!"):
+            vrijednost = Aktivnost("A", [], -1, 2, 3)
+
+    def testkreiranjaSaNeispravnimVremenima(self):
+        with self.assertRaisesRegex(ValueError, "Mora vrijediti optimistično <= modlano <= pesimistično vrijeme!"):
+            vrijednost = Aktivnost("A", [], 4, 2, 3)
+
     def testVarijanseAktivnosti(self):
         a = Aktivnost("A", [], 2, 6, 8)
         self.assertEqual(a.varijansa, 1)
@@ -124,9 +132,13 @@ class TestoviAktivnosti(unittest.TestCase):
         self.aktivnost.izracunajRezervu()
         self.assertEqual(self.aktivnost.rezervaAktivnosti, 2)
 
-    def testIzracunavanjaOcekivanogTrajanjaAktivnostiIzuzetak(self):
+    def testIzracunajOcekivanoVrijemeIzuzetak(self):
         with self.assertRaisesRegex(ValueError, "Mora vrijediti optimistično <= modlano <= pesimistično vrijeme!"):
             vrijednost = self.aktivnost.izracunajOcekivanoVrijeme(6, 5, 12)
+
+    def testIzracunajOcekivanoVrijemeIzuzetak2(self):
+        with self.assertRaisesRegex(ValueError, "Vremena moraju biti pozitivni brojevi!"):
+            vrijednost = Aktivnost("A", [], -2, 3, 4)
 
     def testPostavljanjaPocetnogCvoraAktivnosti(self):
         self.assertIsNone(self.aktivnost.pocetniCvor)
@@ -296,10 +308,12 @@ class TestoviPertKlase(unittest.TestCase):
         self.graf.renumerisiCvorove()
         self.graf.izracunajNajranijaVremena()
         self.graf.izracunajNajkasnijaVremena()
+        self.graf.izracunajTrajanjeProjekta()
         self.graf.izracunajRezerveCvorova()
-        self.graf.odrediKriticnePuteve(self.graf.pocetniCvor, [])
+        self.graf.odrediSvePuteve(self.graf.pocetniCvor, [])
+        self.graf.odrediKriticnePuteve()
         actual = self.graf.dajStirngKriticnihPuteva()
-        expected = "A - B - C - F - fiktivna - G - I\nA - B - D - fiktivna - F - fiktivna - G - I\nA - B - E - G - I\n"
+        expected = "A - B - D - fiktivna - F - fiktivna - G - I\n"
         self.assertEqual(actual, expected)
 
     # provjera na osnovu tabele iz primjera 8.6
@@ -325,11 +339,13 @@ class TestoviPertKlase(unittest.TestCase):
         self.graf.renumerisiCvorove()
         self.graf.izracunajNajranijaVremena()
         self.graf.izracunajNajkasnijaVremena()
+        self.graf.izracunajTrajanjeProjekta()
         self.graf.izracunajRezerveCvorova()
-        self.graf.odrediKriticnePuteve(self.graf.pocetniCvor, [])
+        self.graf.odrediSvePuteve(self.graf.pocetniCvor, [])
+        self.graf.odrediKriticnePuteve()
         self.graf.izracunajDevijacijuNaKriticnomPutu()
         # zaokružuje na 2 decimale i poredi
-        self.assertAlmostEqual(self.graf.devijacijaNaKriticnomPutu, 1.53, places=2)
+        self.assertAlmostEqual(self.graf.devijacijaNaKriticnomPutu, 1.56, places=2)
 
     def testIzracunajRezerveCvorova(self):
         self.graf.izbaciNepotrebneCvorove()
@@ -416,11 +432,11 @@ class TestCitavogAlgoritma(unittest.TestCase):
         TestCitavogAlgoritma.dodajAktivnosti(self.graf, TestCitavogAlgoritma.aktivnosti1)
         self.graf.azurirajGraf()
         # za vjerovatnoću 0.25
-        self.assertEqual(38.97, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.25), 2))
+        self.assertEqual(38.95, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.25), 2))
         # za vjerovatnoću 0.75
-        self.assertEqual(41.03, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.75), 2))
+        self.assertEqual(41.05, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.75), 2))
         # za vjerovatnoću 0.9987
-        self.assertEqual(44.6, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.9987), 2))
+        self.assertEqual(44.71, round(self.graf.izracunajProcjenuTrajanjaProjekta(0.9987), 2))
 
     def testIzracunajNajduzuProcjenuTrajanjaProjekta1(self):
         self.graf = Pert()
@@ -469,6 +485,7 @@ class TestCitavogAlgoritma(unittest.TestCase):
         self.graf.azurirajGraf()
         self.assertAlmostEqual(0.31, self.graf.izracunajVjerovatnocuZavrsetkaProjekta(12), 2)
         self.assertAlmostEqual(0.76, self.graf.izracunajVjerovatnocuZavrsetkaProjekta(14), 2)
+        self.assertAlmostEqual(0, self.graf.izracunajVjerovatnocuZavrsetkaProjekta(0), 2)
 
     def testIspisaGrafa1(self):
         self.graf = Pert()

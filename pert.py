@@ -136,6 +136,7 @@ class Aktivnost:
                  pesimisticnoVrijeme: decimal):
         """
         Kreiranje aktivnosti koja je jedinstveno definisana svojim imenom.
+        Baca ValueError ako nije optimisticno<=modalno<=pesimisticno, ili ako vremena nisu pozitivni brojevi.
 
         :param naziv: naziv aktivnosti
         :param preduvjeti: aktivnosti koje prethode
@@ -143,6 +144,11 @@ class Aktivnost:
         :param modalnoVrijeme: srednje trajanje
         :param pesimisticnoVrijeme: najkraće trajanje
         """
+        if not (optimisticnoVrijeme <= modalnoVrijeme <= pesimisticnoVrijeme):
+            raise ValueError("Mora vrijediti optimistično <= modlano <= pesimistično vrijeme!")
+        elif optimisticnoVrijeme < 0 or modalnoVrijeme < 0 or pesimisticnoVrijeme < 0:
+            raise ValueError("Vremena moraju biti pozitivni brojevi!")
+
         self._id = id(self)
         self._naziv = naziv
         self._trajanje = self.izracunajOcekivanoVrijeme(optimisticnoVrijeme, modalnoVrijeme, pesimisticnoVrijeme)
@@ -212,7 +218,7 @@ class Aktivnost:
     def izracunajOcekivanoVrijeme(self, a: decimal, m: decimal, b: decimal) -> decimal:
         """
         Računa očekivano vrijeme za datu aktivnost kao: očekivanoVrijeme=(a+4m+b)/6
-        Baca ValueError ako nije a<=m<=b
+        Baca ValueError ako nije optimisticno<=modalno<=pesimisticno, ili ako vremena nisu pozitivni brojevi.
 
         :param a: optimistično vrijeme
         :param m: modalno vrijeme
@@ -220,6 +226,8 @@ class Aktivnost:
         """
         if not (a <= m <= b):
             raise ValueError("Mora vrijediti optimistično <= modlano <= pesimistično vrijeme!")
+        elif a < 0 or m < 0 or b < 0:
+            raise ValueError("Vremena moraju biti pozitivni brojevi!")
         return (a + 4 * m + b) / 6
 
     def izracunajVarijansu(self, a: decimal, b: decimal) -> decimal:
@@ -323,20 +331,36 @@ class Pert:
         return len(self.aktivnosti)
 
     def getCvorSaBrojem(self, i: int) -> Cvor:
+        """
+        Pronalazi čvor sa zadanim brojem čvora u grafu.
+        Ako taj čvor ne postoji baca se izuzetak tipa ValueError.
+
+        :param i: Broj traženog čvora.
+        :return: Instanca pronađenog čvora
+        """
         lista = list(filter(lambda x: x.brojCvora == i, self.cvorovi))
         if len(lista) == 0:
             raise ValueError("Cvor sa brojem " + str(i) + " ne postoji!")
         return lista[0]
 
-    # dodaje novu aktivnost u graf
     def dodajAktivnost(self, novaAktivnost: Aktivnost):
+        """
+        Dodaje novu aktivnost u graf.
+        Ako postoji aktivnost sa istim imenom baca izuzetak tipa ValueError.
+
+        :param novaAktivnost: Aktivnost koja se dodaje u graf.
+        """
         if self.__contains__(novaAktivnost):
             raise ValueError("Aktivnost već postoji, nije je moguće dodati")
         else:
             self.aktivnosti.append(novaAktivnost)
 
-    # dodaje novi čvor u graf
     def __dodajCvor(self, noviCvor: Cvor):
+        """
+        Dodaje novi čvor u graf.
+
+        :param noviCvor: Čcor koji se dodaje u graf.
+        """
         self.cvorovi.append(noviCvor)
 
     def kreirajStrukturu(self):
@@ -575,30 +599,14 @@ class Pert:
 
             cvor.najkasnijeVrijeme = min(nizVremena) if nizVremena else cvor.najkasnijeVrijeme
 
-    def odrediKriticnePuteve(self, trenutniCvor: Cvor, put: list):
+    def odrediKriticnePuteve(self):
         """
-        Funkcija rekurzivno određuje sve kritične puteve u grafu, i spašava ih u atribut kriticniPutevi
-
-        :param trenutniCvor: Trenutni čvor u nizu rekurzija
-        :param put: Do sada nađeni put
+        Funkcija određuje sve kritične puteve u grafu, i spašava ih u atribut kriticniPutevi
         """
-        # označi trenutni čvor posjećenim
-        trenutniCvor._posjecen = True
-        put.append(trenutniCvor)
-
-        # ako se došlo do krajnjeg čvora to je jedan put
-        if trenutniCvor == self.krajnjiCvor:
-            self.kriticniPutevi.append(put[:])
-        else:
-            # idi kroz njegove sljedbenike, tj aktivnost.krajnjiCvor (to su sljedbenici)
-            for aktivnost in trenutniCvor.izlazneAktivnosti:
-                # ako sljedeći čvor nije posjećen i ako mu je rezerva nula (uslov za kritični put)
-                if aktivnost.krajnjiCvor._posjecen == False and aktivnost.krajnjiCvor.rezerva == 0:
-                    self.odrediKriticnePuteve(aktivnost.krajnjiCvor, put)
-
-        # izbaci zadnji čvor iz liste i označi ga neposjećenim (može se naći u još nekim putevima)
-        put.pop()
-        trenutniCvor._posjecen = False
+        for tuple in self.sviPuteviSaTrajanjemIDevijacijom:
+            # ako je zbir trajanja aktivnosti na nekom putu (to je vrijednost u tuple[1]) jednaka trajanju projekta, od početka do kraja, onda je taj put kritičan
+            if tuple[1] == self.trajanjeProjekta:
+                self.kriticniPutevi.append(tuple[0])
 
     def odrediSvePuteve(self, trenutniCvor: Cvor, put: list):
         """
@@ -646,7 +654,7 @@ class Pert:
 
         self._devijacijaNaKriticnomPutu = math.sqrt(varijansa)
 
-    # Da bi procjena trajanja bila što pouzdanija treba naći najveću devijaciju prolazeći kor sve puteve,
+    # Da bi procjena trajanja bila što pouzdanija treba naći najveću devijaciju prolazeći kroz sve puteve,
     # bilo kritične ili subkritične
     def izracunajDevijacijuNaPutu(self, put: list) -> decimal:
         """
@@ -678,9 +686,9 @@ class Pert:
         self.izracunajTrajanjeProjekta()
         self.izracunajRezerveCvorova()
         self.izracunajRezerveAktivnosti()
-        self.odrediKriticnePuteve(self.pocetniCvor, [])
-        self.izracunajDevijacijuNaKriticnomPutu()
         self.odrediSvePuteve(self.pocetniCvor, [])
+        self.odrediKriticnePuteve()
+        self.izracunajDevijacijuNaKriticnomPutu()
 
     def izracunajRezerveCvorova(self):
         """
@@ -751,6 +759,13 @@ class Pert:
         :param period: Period za koji se traži vjerovatnoća završetka projekta.
         :return: Vjerovatnoća završetka za dati period.
         """
+        # Vjerovatnoća završetka za 0 vremenskih jedinica je 0
+        if period == 0:
+            return 0
+        # ako nema odstupanja na kritičnom putu
+        elif self._devijacijaNaKriticnomPutu == 0:
+            return norm.cdf((period - self.trajanjeProjekta))
+
         return norm.cdf((period - self.trajanjeProjekta) / self._devijacijaNaKriticnomPutu)
 
     # ispisivanje Pert grafa
