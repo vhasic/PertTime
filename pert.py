@@ -138,11 +138,11 @@ class Aktivnost:
         Kreiranje aktivnosti koja je jedinstveno definisana svojim imenom.
         Baca ValueError ako nije optimisticno<=modalno<=pesimisticno, ili ako vremena nisu pozitivni brojevi.
 
-        :param naziv: naziv aktivnosti
-        :param preduvjeti: aktivnosti koje prethode
-        :param optimisticnoVrijeme: najduže trajanje
-        :param modalnoVrijeme: srednje trajanje
-        :param pesimisticnoVrijeme: najkraće trajanje
+        :param naziv: Naziv aktivnosti
+        :param preduvjeti: Aktivnosti koje prethode
+        :param optimisticnoVrijeme: Najkraće trajanje
+        :param modalnoVrijeme: Srednje trajanje
+        :param pesimisticnoVrijeme: Najduže trajanje
         """
         if not (optimisticnoVrijeme <= modalnoVrijeme <= pesimisticnoVrijeme):
             raise ValueError("Mora vrijediti optimistično <= modlano <= pesimistično vrijeme!")
