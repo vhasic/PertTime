@@ -18,22 +18,22 @@ def createPertChart(veze, najranijaVremena, najkasnijaVremena, rezerveCvorova):
     for pocetniCvor in veze:
         for par in veze[pocetniCvor]:
             krajnjiCvor = par[0]
-            parentStr = '{}|{}|{}'.format(najranijaVremena[pocetniCvor], najkasnijaVremena[pocetniCvor],
+            pocetniStr = '{}|{}|{}'.format(najranijaVremena[pocetniCvor], najkasnijaVremena[pocetniCvor],
                                           rezerveCvorova[pocetniCvor])
-            childStr = '{}|{}|{}'.format(najranijaVremena[krajnjiCvor], najkasnijaVremena[krajnjiCvor],
+            krajnjiStr = '{}|{}|{}'.format(najranijaVremena[krajnjiCvor], najkasnijaVremena[krajnjiCvor],
                                          rezerveCvorova[krajnjiCvor])
-            labelsDict[pocetniCvor] = parentStr
-            labelsDict[krajnjiCvor] = childStr
+            labelsDict[pocetniCvor] = pocetniStr
+            labelsDict[krajnjiCvor] = krajnjiStr
             g.add_edge(pocetniCvor, krajnjiCvor, color='black')
             if par[1] != "fiktivna":
                 edgeLabels[pocetniCvor, krajnjiCvor] = par[1]
             else:
                 edgeLabels[pocetniCvor, krajnjiCvor] = '0'
     pos = nx.planar_layout(g)
-    for task in najranijaVremena:
-        x, y = pos[task]
-        plt.text(x, y + 0.1, s=labelsDict[task], bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
-    # print(nx.info(g))
+    for cvor in najranijaVremena:
+        x, y = pos[cvor]
+        # prikaz teksta s na poziciji x, y + 0.1, sa bounding boxom crvene boje i horizontalno poravnatim tekstom
+        plt.text(x, y + 0.1, s=labelsDict[cvor], bbox=dict(facecolor='red', alpha=0.5), horizontalalignment='center')
 
     edges = g.edges()
     colors = [g[u][v]['color'] for u, v in edges]
@@ -41,7 +41,6 @@ def createPertChart(veze, najranijaVremena, najkasnijaVremena, rezerveCvorova):
     nx.draw(g, pos, with_labels=True, edge_color=colors)
     nx.draw_networkx_edge_labels(g, pos, edge_labels=edgeLabels, font_size=8)
     plt.savefig('pert.png', bbox_inches='tight')
-    # plt.show()
 
 
 def createGanttChart(vremenaPocetka, vremenaZavrsetka, trajanja, rezerve):
