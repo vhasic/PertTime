@@ -1,5 +1,6 @@
 import unittest
 
+import pert
 from pert import Aktivnost
 from pert import Cvor
 from pert import Pert
@@ -463,7 +464,7 @@ class TestCitavogAlgoritma(unittest.TestCase):
         ocekivano = "A - C - F - H - fiktivna - J\nB - D - fiktivna - F - H - fiktivna - J\n"
         self.assertEqual(ocekivano, self.graf.dajStirngKriticnihPuteva())
 
-    # test procjene trajanja kada imaju 2 kritična puta
+    # tests procjene trajanja kada imaju 2 kritična puta
     def testProcjeneTrajanja2(self):
         self.graf = Pert()
         TestCitavogAlgoritma.dodajAktivnosti(self.graf, TestCitavogAlgoritma.aktivnosti2)
